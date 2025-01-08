@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
-import { loginUser } from "@/../server/login";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -30,12 +30,16 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await loginUser(formData);
-      if (response.success) {
-        console.log("Login successful");
-        router.push("/verification");
-      } else {
-        setError(response.message);
+      const response = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if(response?.error) {
+        setError(response.error);
+      }else{
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Error during login:", error);
