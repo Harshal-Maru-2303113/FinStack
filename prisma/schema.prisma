@@ -37,7 +37,7 @@ model User {
   password    String      @db.Text
   isVerified  Boolean   @default(false)
   age         Int
-  gender      String    @db.VarChar(10)
+  gender      String    @db.VarChar(50)
   photoURL    String    @db.VarChar(999)
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
