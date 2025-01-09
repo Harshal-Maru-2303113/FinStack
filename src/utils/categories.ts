@@ -16,6 +16,7 @@ interface Category {
     { category_id: 2, name: "Shopping" },
     { category_id: 4, name: "Transportation" },
     { category_id: 5, name: "Vehicle" },
+    { category_id: 12, name: "Income" },
   ];
   
 

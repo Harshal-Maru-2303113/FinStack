@@ -47,7 +47,7 @@ model User {
 
 model Category {
   category_id   Int         @id @default(autoincrement())
-  category_name String      @db.VarChar(50)
+  category_name String      @db.VarChar(100)
 
   transactions  Transaction[]
 }

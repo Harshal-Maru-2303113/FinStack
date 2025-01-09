@@ -2,13 +2,11 @@
 interface Transaction {
     transaction_id: number;
     email: string;
-    date_time: string;
+    date_time: Date;
     amount: string;
     transaction_type: string;
     description: string;
-    subcategory_id: number;
     balance: string;
-    subcategory_name: string;
     category_id: number;
     category_name: string;
   }
