@@ -14,12 +14,17 @@ export default {
       },
       animation: {
         'gradient-border': 'gradient-border 3s ease infinite',
+        'pulse': "pulse 1.5s ease-in-out infinite"
       },
       keyframes: {
         'gradient-border': {
           '0%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
           '100%': { backgroundPosition: '0% 50%' },
+        },
+        'pulse': {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "1" },
         },
       },
     },

@@ -1,17 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  FiCalendar,
-  FiFilter,
-} from "react-icons/fi";
-import Navigation from "#/components/Navigation";
+import { FiCalendar, FiFilter } from "react-icons/fi";
+import Navigation from "@/components/Navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import api from "#/utils/axios";
-import { Transaction } from "#/utils/Calculate";
-import { categories } from "#/utils/categories";
+import { Transaction } from "@/utils/Calculate";
+import { categories } from "@/utils/categories";
 import { FaTimes } from "react-icons/fa";
+import { getSession } from "next-auth/react";
+import getUserTransactions from "@/../server/getUserTransactions";
+import TransactionLoading from "@/components/TransactionLoading";
 
 export default function TransactionsPage() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
@@ -46,6 +45,8 @@ export default function TransactionsPage() {
     type: "",
   });
 
+  const [isTransactionLoading, setIsTransactionLoading] = useState(true);
+
   const handleCategoryChange = (value: string) => {
     const currentCategories = filters.category;
     if (!currentCategories.includes(value)) {
@@ -57,9 +58,9 @@ export default function TransactionsPage() {
       });
     }
   };
-  useEffect(()=>{
-    console.dir(filters.category)
-  },[filters])
+  useEffect(() => {
+    console.dir(filters.category);
+  }, [filters]);
 
   const removeCategory = (value: string) => {
     const currentCategories = filters.category;
@@ -72,18 +73,22 @@ export default function TransactionsPage() {
     });
   };
 
- 
-
-  const getTransactionsData = async (start: number, limit: number) => {
+  const getTransactionsData = async (
+    start: number,
+    limit: number,
+    email: string
+  ) => {
     try {
-      const response = await api.post<{ success: boolean; data: Transaction[]; message?: string }>("/user/getTransactionData", {
-        start,
-        limit,
-      });
-      if (response.data.success) {
-        return response.data.data;
+      const response: {
+        success: boolean;
+        message: string;
+        data: Transaction[];
+      } = await getUserTransactions(email, start, limit);
+
+      if (response.success) {
+        return response.data;
       } else {
-        console.error("Error fetching transactions:", response.data.message);
+        console.error("Error fetching transactions:", response.message);
         return [];
       }
     } catch (error) {
@@ -94,7 +99,12 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const initialData = await getTransactionsData(0, 10);
+      const session = await getSession();
+      if (!session) {
+        throw new Error("User not authenticated");
+      }
+      const initialData = await getTransactionsData(0, 10, session.user.email);
+      setIsTransactionLoading(false);
       setTransactionArray(initialData);
       if (initialData.length < 10) {
         setHasMoreData(false);
@@ -104,8 +114,16 @@ export default function TransactionsPage() {
   }, []);
 
   const loadMoreTransactions = async () => {
+    const session = await getSession();
+    if (!session) {
+      throw new Error("User not authenticated");
+    }
     const start = transactionArray.length;
-    const newTransactions = await getTransactionsData(start, 10);
+    const newTransactions = await getTransactionsData(
+      start,
+      10,
+      session.user.email
+    );
     if (newTransactions.length > 0) {
       setTransactionArray((prev) => [...prev, ...newTransactions]);
       if (newTransactions.length < 10) {
@@ -166,6 +184,27 @@ export default function TransactionsPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    {isTransactionLoading ? (
+                      <tr>
+                        <td>
+                          <TransactionLoading items={4}/>
+                        </td>
+                        <td>
+                          <TransactionLoading items={4} />
+                        </td>
+                        <td>
+                          <TransactionLoading items={4} />
+                        </td>
+                        <td>
+                          <TransactionLoading items={4} />
+                        </td>
+                        <td>
+                          <TransactionLoading items={4} />
+                        </td>
+                      </tr>
+                    ) : (
+                      <></>
+                    )}
                     {transactionArray.reverse().map((transaction, index) => (
                       <motion.tr
                         key={transaction.transaction_id}
@@ -210,26 +249,32 @@ export default function TransactionsPage() {
                   </tbody>
                 </table>
                 {/* Load More Button */}
-                {hasMoreData ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-center mt-4"
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={loadMoreTransactions}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition"
-                    >
-                      Load More
-                    </motion.button>
-                  </motion.div>
+                {isTransactionLoading ? (
+                  <></>
                 ) : (
-                  <div className="text-center mt-4 text-gray-400">
-                    No more data to load
-                  </div>
+                  <>
+                    {hasMoreData ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center mt-4"
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={loadMoreTransactions}
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition"
+                        >
+                          Load More
+                        </motion.button>
+                      </motion.div>
+                    ) : (
+                      <div className="text-center mt-4 text-gray-400">
+                        No more data to load
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               {/* Popup Modal */}
@@ -503,8 +548,7 @@ export default function TransactionsPage() {
                         <option
                           key={category.category_id}
                           value={category.name}
-                          disabled={filters.category
-                            .includes(category.name)}
+                          disabled={filters.category.includes(category.name)}
                         >
                           {category.name}
                         </option>
@@ -542,9 +586,7 @@ export default function TransactionsPage() {
                       <option value="debit">Debit</option>
                     </select>
                   </div>
-                  <button
-                    className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition"
-                  >
+                  <button className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition">
                     Apply Filters
                   </button>
                 </div>

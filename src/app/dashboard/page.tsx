@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,
@@ -11,55 +12,39 @@ import {
 } from "react-icons/fi";
 import Navigation from "@/components/Navigation";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { calculateBalance, Transaction } from "@/utils/Calculate";
-
+import { Transaction } from "@/utils/Calculate";
+import getUserTransactions from "@/../server/getUserTransactions";
+import TransactionLoading from "@/components/TransactionLoading";
+import { getSession } from "next-auth/react";
 
 export default function Dashboard() {
-  const [transactionArray] = useState<Transaction[]>([]);
-  const [amount, setAmount] = useState(0);
-  const [income, setIncome] = useState(0);
-  const [expense, setExpense] = useState(0);
+  const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
+  const [amount] = useState(0);
+  const [income] = useState(0);
+  const [expense] = useState(0);
 
-  // const getTransactionsData = async (start: number, limit: number) => {
-  //   try {
-  //     const response = await api.post<{ success: boolean; data: Transaction[]; message?: string }>("/user/getTransactionData", {
-  //       start,
-  //       limit,
-  //     });
-  //     if (response.data.success) {
-  //       return response.data.data;
-  //     } else {
-  //       console.error("Error fetching transactions:", response.data.message);
-  //       return [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching transactions:", error);
-  //     return [];
-  //   }
-  // };
-  // useEffect(() => {
-  //   const fetchDta = async ()=>{
-  //     const initialData = await getTransactionsData(0, 4);
-  //     setTransactionArray(initialData);
-  //   }
-  //   fetchDta();
-  // }, []);
-  console.log(transactionArray);
+  const [isTransactionLoading, setIsTransactionLoading] = useState(true);
+
   useEffect(() => {
-    if (transactionArray.length > 0) {
-      const { currentBalance, totalIncome, totalSpending } =
-        calculateBalance(transactionArray);
-      setAmount(currentBalance);
-      setIncome(totalIncome);
-      setExpense(totalSpending);
-    }
-  }, [transactionArray]);
+    const fetchTransactions = async () => {
+      const session = await getSession();
+      if (!session) {
+        return;
+      }
+      const transactions = await getUserTransactions(session.user.email, 0, 4);
+      if (transactions.success) {
+        setTransactionArray(transactions.data);
+        setIsTransactionLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []); 
+
+  console.log(transactionArray);
+
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
 
-  // Function to handle showing the popup
-
-  // Function to truncate description to first two words
   const truncateDescription = (description: string) => {
     const words = description.split(" ");
     if (words.length > 2) {
@@ -152,8 +137,13 @@ export default function Dashboard() {
                     Recent Transactions
                   </h2>
                   <div className="space-y-3">
-                    {transactionArray
-                      .map((transaction, index) => (
+                    {isTransactionLoading ? (
+                      <div className="flex">
+                        <TransactionLoading items={4} />
+                        <TransactionLoading items={4} />
+                      </div>
+                    ) : (
+                      transactionArray.map((transaction, index) => (
                         <div
                           key={index}
                           className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
@@ -191,7 +181,8 @@ export default function Dashboard() {
                             ${Number(transaction.amount).toFixed(2)}
                           </span>
                         </div>
-                      ))}
+                      ))
+                    )}
                   </div>
 
                   {/* Popup Modal */}
@@ -265,15 +256,17 @@ export default function Dashboard() {
                             <span className="font-semibold text-xl text-blue-400">
                               Amount:
                             </span>
-                            <span className={`block text-xl ${
+                            <span
+                              className={`block text-xl ${
                                 popupContent.transaction_type === "credit"
                                   ? "text-green-400"
                                   : "text-red-400"
-                              }`}>
+                              }`}
+                            >
                               ${Number(popupContent.amount).toFixed(2)}
                             </span>
                           </p>
-                          <p >
+                          <p>
                             <span className="font-semibold text-xl text-blue-400">
                               Description:
                             </span>
@@ -289,7 +282,7 @@ export default function Dashboard() {
                               {popupContent.category_name}
                             </span>
                           </p>
-                          
+
                           <p className="flex items-center gap-4">
                             <span className="font-semibold text-xl text-blue-400">
                               Balance:
