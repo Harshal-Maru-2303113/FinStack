@@ -1,7 +1,7 @@
-'use server'
+"use server";
 
 import nodemailer from "nodemailer";
-import prisma from "../../lib/prisma";
+import prisma from "../lib/prisma";
 import crypto from "crypto";
 
 const transporter = nodemailer.createTransport({
@@ -47,13 +47,13 @@ const saveOTP = async (email: string, otp: string): Promise<void> => {
 const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   try {
     const record = await prisma.oTP.findFirst({
-        where: {
-            email,
-            otp,
-            expires_at: {
-                gte: new Date(),
-            },
+      where: {
+        email,
+        otp,
+        expires_at: {
+          gte: new Date(),
         },
+      },
     });
 
     console.log("Verification attempt:", {

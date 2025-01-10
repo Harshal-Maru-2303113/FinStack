@@ -1,6 +1,6 @@
-'use server';
+"use server";
 
-import { sendOTP } from "@/utils/emailService";
+import { sendOTP } from "../../../../server/emailService";
 import prisma from "@/../lib/prisma";
 
 export default async function resendOTP(email: string) {

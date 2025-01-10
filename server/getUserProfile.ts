@@ -2,12 +2,24 @@
 
 import { PrismaClient } from "@prisma/client";
 
+type User = {
+  id: number;
+  username: string;
+  email: string;
+  password: string;
+  isVerified: boolean;
+  age: number;
+  gender: string;
+  photoURL: string;
+  created_at: Date;
+  updated_at: Date;
+} | null;
 
 
 
 const prisma: PrismaClient = new PrismaClient();
 
-export async function getUserProfile(email:string) {
+export async function getUserProfile(email:string): Promise<User> {
   try {
 
    
@@ -20,6 +32,6 @@ export async function getUserProfile(email:string) {
     return user;
   } catch (error) {
     console.log(error)
-    return {};
+    return {} as User;
   }
 }
