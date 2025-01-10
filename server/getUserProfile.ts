@@ -19,7 +19,7 @@ export async function getUserProfile(email:string) {
     console.dir(user);
     return user;
   } catch (error) {
-    console.error("Error fetching user profile:", error);
-    throw error;
+    console.log(error)
+    return {};
   }
 }

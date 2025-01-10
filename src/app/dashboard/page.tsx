@@ -16,6 +16,7 @@ import { Transaction } from "@/utils/Calculate";
 import getUserTransactions from "@/../server/getUserTransactions";
 import TransactionLoading from "@/components/TransactionLoading";
 import { getSession } from "next-auth/react";
+import { filter } from "@/../server/getUserTransactions";
 
 export default function Dashboard() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
@@ -31,7 +32,7 @@ export default function Dashboard() {
       if (!session) {
         return;
       }
-      const transactions = await getUserTransactions(session.user.email, 0, 4);
+      const transactions = await getUserTransactions(session.user.email, 0, 4, {  } as filter);
       if (transactions.success) {
         setTransactionArray(transactions.data);
         setIsTransactionLoading(false);

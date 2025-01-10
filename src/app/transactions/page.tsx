@@ -12,11 +12,15 @@ import { getSession } from "next-auth/react";
 import getUserTransactions from "@/../server/getUserTransactions";
 import TransactionLoading from "@/components/TransactionLoading";
 
+type TransactionType = "credit" | "debit" | "";
+
 export default function TransactionsPage() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [filterOverlay, setFilterOverlay] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [hasReset,setHasReset] = useState(false);
   const [filters, setFilters] = useState<{
     date: string;
     dateType: string;
@@ -28,8 +32,8 @@ export default function TransactionsPage() {
     amountRange: string;
     minAmount: string;
     maxAmount: string;
-    category: string[]; // Explicitly set to string
-    type: string;
+    category: string[];
+    transaction_type: TransactionType | "";
   }>({
     date: "",
     dateType: "",
@@ -39,18 +43,33 @@ export default function TransactionsPage() {
     amount: "",
     amountType: "",
     amountRange: "",
-    minAmount: "",
-    maxAmount: "",
-    category: [], // Initialize as an empty string
-    type: "",
+    minAmount: "0",
+    maxAmount: "0",
+    category: [],
+    transaction_type: "" as TransactionType | "",
   });
 
   const [isTransactionLoading, setIsTransactionLoading] = useState(true);
 
+  // Check if any filters are active
+  const checkActiveFilters = () => {
+    return (
+      filters.dateType !== "" ||
+      filters.startDate !== "" ||
+      filters.endDate !== "" ||
+      filters.rangeOption !== "" ||
+      filters.amount !== "" ||
+      filters.amountType !== "" ||
+      filters.minAmount !== "0" ||
+      filters.maxAmount !== "0" ||
+      filters.category.length > 0 ||
+      filters.transaction_type !== ""
+    );
+  };
+
   const handleCategoryChange = (value: string) => {
     const currentCategories = filters.category;
     if (!currentCategories.includes(value)) {
-      // Add the new category
       const updatedCategories = [...currentCategories, value];
       setFilters({
         ...filters,
@@ -58,6 +77,7 @@ export default function TransactionsPage() {
       });
     }
   };
+
   useEffect(() => {
     console.dir(filters.category);
   }, [filters]);
@@ -83,7 +103,7 @@ export default function TransactionsPage() {
         success: boolean;
         message: string;
         data: Transaction[];
-      } = await getUserTransactions(email, start, limit);
+      } = await getUserTransactions(email, start, limit, filters);
 
       if (response.success) {
         return response.data;
@@ -97,21 +117,48 @@ export default function TransactionsPage() {
     }
   };
 
+  const fetchInitialData = async () => {
+    const session = await getSession();
+    if (!session) {
+      throw new Error("User not authenticated");
+    }
+    const initialData = await getTransactionsData(0, 10, session.user.email);
+    setIsTransactionLoading(false);
+    setTransactionArray(initialData);
+    setHasMoreData(initialData.length >= 10);
+  };
+
   useEffect(() => {
-    const fetchInitialData = async () => {
-      const session = await getSession();
-      if (!session) {
-        throw new Error("User not authenticated");
-      }
-      const initialData = await getTransactionsData(0, 10, session.user.email);
-      setIsTransactionLoading(false);
-      setTransactionArray(initialData);
-      if (initialData.length < 10) {
-        setHasMoreData(false);
-      }
-    };
     fetchInitialData();
-  }, []);
+  }, [hasReset]);
+
+  const applyFilters = async () => {
+    setIsTransactionLoading(true);
+    setTransactionArray([]); // Clear existing transactions
+    setHasMoreData(true); // Reset hasMoreData state
+    await fetchInitialData();
+    setFilterOverlay(false);
+    setIsFilterActive(checkActiveFilters());
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      date: "",
+      dateType: "",
+      startDate: "",
+      endDate: "",
+      rangeOption: "",
+      amount: "",
+      amountType: "",
+      amountRange: "",
+      minAmount: "0",
+      maxAmount: "0",
+      category: [],
+      transaction_type: "",
+    });
+    setIsFilterActive(false);
+    setHasReset(e=>!e);
+  };
 
   const loadMoreTransactions = async () => {
     const session = await getSession();
@@ -158,13 +205,49 @@ export default function TransactionsPage() {
                   Transactions
                 </h1>
                 <div className="flex gap-3">
-                  <button
-                    className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition"
-                    onClick={() => setFilterOverlay(true)}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <FiFilter className="inline mr-2" />
-                    Filter
-                  </button>
+                    <motion.button
+                      className={`relative px-4 py-2 rounded-lg transition-all duration-300 ease-in-out ${
+                        isFilterActive
+                          ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                          : "bg-gray-800 text-white hover:bg-gray-700"
+                      }`}
+                      onClick={() => setFilterOverlay(true)}
+                      animate={{
+                        scale: isFilterActive ? [1, 1.05, 1] : 1,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <FiFilter className="inline mr-2" />
+                        Filter
+                        {isFilterActive && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="ml-2 w-2 h-2 bg-white rounded-full"
+                          />
+                        )}
+                      </div>
+                    </motion.button>
+                  </motion.div>
+                  
+                  {isFilterActive && (
+                    <motion.button
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                      onClick={resetFilters}
+                    >
+                      Reset
+                    </motion.button>
+                  )}
                   <Link href={"/addtransactions"}>
                     <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition">
                       + New Transaction
@@ -187,7 +270,7 @@ export default function TransactionsPage() {
                     {isTransactionLoading ? (
                       <tr>
                         <td>
-                          <TransactionLoading items={4}/>
+                          <TransactionLoading items={4} />
                         </td>
                         <td>
                           <TransactionLoading items={4} />
@@ -576,9 +659,12 @@ export default function TransactionsPage() {
                     )}
                     <select
                       className="w-full p-2 bg-gray-700 text-white rounded-lg"
-                      value={filters.type}
+                      value={filters.transaction_type}
                       onChange={(e) =>
-                        setFilters({ ...filters, type: e.target.value })
+                        setFilters({
+                          ...filters,
+                          transaction_type: e.target.value as TransactionType,
+                        })
                       }
                     >
                       <option value="">All Types</option>
@@ -586,7 +672,10 @@ export default function TransactionsPage() {
                       <option value="debit">Debit</option>
                     </select>
                   </div>
-                  <button className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition">
+                  <button
+                    onClick={applyFilters}
+                    className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition"
+                  >
                     Apply Filters
                   </button>
                 </div>
