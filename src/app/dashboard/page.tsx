@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   FiDollarSign,
   FiTrendingUp,
-  FiPieChart,
   FiCreditCard,
   FiArrowUp,
   FiArrowDown,
@@ -20,6 +19,33 @@ import { filter } from "@/../server/getUserTransactions";
 import truncateDescription from "@/utils/truncateDescription";
 import TransactionModal from "@/components/TransactionModal";
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
+import SpendingChart from "@/components/SpendingChart";
+import BalanceChart from "@/components/BalanceChart";
+import {
+  Chart,
+  DoughnutController,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
+
+// Register the required components
+Chart.register(
+  DoughnutController,
+  ArcElement,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Constants
 const QUICK_STATS = (amount: number, income: number, expense: number) => [
@@ -49,6 +75,13 @@ export default function Dashboard() {
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
   const [isFinanceValuesLoading, setIsFinanceValuesLoading] = useState(true);
 
+  const [chartLabels, setChartLabels] = useState<string[]>([]);
+  const [chartData, setChartData] = useState<number[]>([]);
+  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
+    []
+  );
+  const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
+
   useEffect(() => {
     const fetchTransactions = async () => {
       const session = await getSession();
@@ -65,15 +98,85 @@ export default function Dashboard() {
         setIsTransactionLoading(false);
         setBalance(Number(transactions.data[0].balance));
         const FinanceData = await calculateMonthlyFinance(session.user.email);
-        console.dir(FinanceData);
         setIncome(FinanceData.totalIncome);
         setExpense(FinanceData.totalExpense);
+
+        const allTransactions = await getUserTransactions(
+          session.user.email,
+          0,
+          undefined,
+          {} as filter
+        );
+
+        if (allTransactions.success) {
+          const balances: number[] = [];
+          const date_result = processTransactionDates(allTransactions.data);
+          allTransactions.data.reverse().forEach((transaction: Transaction) => {
+            balances.push(Number(transaction.balance));
+          });
+          setBalanceOverTimeLabels(date_result);
+          setBalanceOverTimeData(balances);
+        }
       }
       setIsFinanceValuesLoading(false);
       setIsTransactionLoading(false);
     };
+    function processTransactionDates(
+      transactions: { date_time: string | Date }[]
+    ): string[] {
+      const dates: string[] = [];
+      const uniqueMonths = new Set<string>();
+
+      transactions.forEach((transaction) => {
+        const date = new Date(transaction.date_time);
+        const month = date.toLocaleString("default", { month: "long" }); // Full month name (e.g., "January")
+        uniqueMonths.add(month);
+      });
+
+      if (uniqueMonths.size > 1) {
+        // If transactions span multiple months, return only the months
+        transactions.forEach((transaction) => {
+          const date = new Date(transaction.date_time);
+          const month = date.toLocaleString("default", { month: "long" });
+          dates.push(month);
+        });
+      } else {
+        // If all transactions are in the same month, return full dates
+        transactions.forEach((transaction) => {
+          const date = new Date(transaction.date_time);
+          dates.push(date.toLocaleDateString()); // Format: "MM/DD/YYYY"
+        });
+      }
+
+      return dates;
+    }
+
+    const getChartData = async () => {
+      const session = await getSession();
+      if (!session) return;
+
+      const transactions = await getUserTransactions(
+        session.user.email,
+        0,
+        undefined,
+        {} as filter
+      );
+
+      if (transactions.success) {
+        const categories: { [key: string]: number } = {};
+        transactions.data.forEach((transaction: Transaction) => {
+          const category = transaction.category_name || "Others";
+          categories[category] =
+            (categories[category] || 0) + Number(transaction.amount);
+        });
+
+        setChartLabels(Object.keys(categories));
+        setChartData(Object.values(categories));
+      }
+    };
 
     fetchTransactions();
+    getChartData();
   }, []);
 
   return (
@@ -133,12 +236,58 @@ export default function Dashboard() {
               {/* Main Content */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
                 {/* Chart Section */}
-                <div className="xl:col-span-2 bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700">
-                  <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
-                    Spending Analytics
-                  </h2>
-                  <div className="h-48 md:h-64 bg-gray-700/50 rounded-lg flex items-center justify-center">
-                    <FiPieChart size={48} className="text-gray-600" />
+                <div className="xl:col-span-2 flex flex-col lg:flex-row justify-between items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
+                  {/* Spending Analytics Section */}
+                  <div className="flex-1 flex flex-col bg-gray-700/50 rounded-lg p-4 md:p-6">
+                    <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
+                      Spending Analytics
+                    </h2>
+
+                    {/* Total Spending Tab */}
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                      <span className="text-gray-400 text-sm md:text-base">
+                        Total Spending:
+                      </span>
+                      <span className="block text-xl md:text-2xl font-bold text-white">
+                        $
+                        {chartData
+                          .reduce((total, amount) => total + amount, 0)
+                          .toFixed(2)}
+                      </span>
+                    </div>
+
+                    {/* Chart Section */}
+                    <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
+                      <SpendingChart labels={chartLabels} data={chartData} />
+                    </div>
+                  </div>
+
+                  {/* Balance Over Time Section */}
+                  <div className="flex-1 flex flex-col bg-gray-700/50 rounded-lg p-4 md:p-6">
+                    <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
+                      Balance Over Time
+                    </h2>
+
+                    {/* Current Balance Tab */}
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                      <span className="text-gray-400 text-sm md:text-base">
+                        Current Balance:
+                      </span>
+                      <span className="block text-xl md:text-2xl font-bold text-white">
+                        $
+                        {balanceOverTimeData[
+                          balanceOverTimeData.length - 1
+                        ]?.toFixed(2) || "0.00"}
+                      </span>
+                    </div>
+
+                    {/* Chart Section */}
+                    <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
+                      <BalanceChart
+                        labels={balanceOverTimeLabels}
+                        data={balanceOverTimeData}
+                      />
+                    </div>
                   </div>
                 </div>
 

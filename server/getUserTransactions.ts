@@ -24,7 +24,7 @@ interface filter {
 export default async function getUserTransactions(
   email: string,
   start: number,
-  items: number,
+  items: number | undefined,
   filters: {
     date?: string;
     dateType?: string;

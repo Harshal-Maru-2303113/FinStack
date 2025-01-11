@@ -1,8 +1,5 @@
 
-interface Category {
-    category_id: number;
-    name: string;
-  }
+import Category from "@/types/Categories";
   
   const categories: Category[] = [
     { category_id: 7, name: "Communication" },
