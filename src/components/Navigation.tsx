@@ -7,14 +7,12 @@ import {
   FiHome, 
   FiDollarSign, 
   FiPieChart, 
-  FiTarget, 
-  FiCreditCard, 
   FiTrendingUp,
-  FiBell,
   FiSettings,
   FiUser,
   FiMenu,
-  FiX
+  FiX,
+  FiBarChart2
 } from "react-icons/fi";
 
 export default function Navigation() {
@@ -36,12 +34,10 @@ export default function Navigation() {
     { title: "Dashboard", icon: <FiHome size={20} />, path: "/dashboard" },
     { title: "Transactions", icon: <FiDollarSign size={20} />, path: "/transactions" },
     { title: "Budget", icon: <FiPieChart size={20} />, path: "/budget" },
-    { title: "Goals", icon: <FiTarget size={20} />, path: "/goals" },
-    { title: "Bills", icon: <FiCreditCard size={20} />, path: "/bills" },
     { title: "Investments", icon: <FiTrendingUp size={20} />, path: "/investments" },
-    { title: "Notifications", icon: <FiBell size={20} />, path: "/notifications" },
+    { title: "Analytics", icon: <FiBarChart2 size={20} />, path: "/analytics" }, 
     { title: "Profile", icon: <FiUser size={20} />, path: "/profile" },
-    { title: "Settings", icon: <FiSettings size={20} />, path: "/settings" }
+    { title: "Settings", icon: <FiSettings size={20} />, path: "/settings" },
   ];
 
   const menuVariants = {
@@ -130,7 +126,7 @@ export default function Navigation() {
               className="p-4"
             >
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                ClarityFi
+                FinStack
               </h1>
             </motion.div>
 

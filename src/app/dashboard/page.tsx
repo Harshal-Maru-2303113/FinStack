@@ -19,8 +19,8 @@ import { filter } from "@/../server/getUserTransactions";
 import truncateDescription from "@/utils/truncateDescription";
 import TransactionModal from "@/components/TransactionModal";
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
-import SpendingChart from "@/components/SpendingChart";
-import BalanceChart from "@/components/BalanceChart";
+import SpendingChart from "@/components/graphs/SpendingChart";
+import BalanceChart from "@/components/graphs/BalanceChart";
 import {
   Chart,
   DoughnutController,
@@ -33,6 +33,7 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import GraphSkeleton from "@/components/GraphLoading";
 
 // Register the required components
 Chart.register(
@@ -81,6 +82,7 @@ export default function Dashboard() {
     []
   );
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
+  const [isGraphLoading, setIsGraphLoading] = useState(true);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -169,7 +171,7 @@ export default function Dashboard() {
           categories[category] =
             (categories[category] || 0) + Number(transaction.amount);
         });
-
+        setIsGraphLoading(false);
         setChartLabels(Object.keys(categories));
         setChartData(Object.values(categories));
       }
@@ -236,7 +238,8 @@ export default function Dashboard() {
               {/* Main Content */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
                 {/* Chart Section */}
-                <div className="xl:col-span-2 flex flex-col lg:flex-row justify-between items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
+                <div className="hidden md:flex xl:col-span-2 flex-col lg:flex-row justify-between items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
+
                   {/* Spending Analytics Section */}
                   <div className="flex-1 flex flex-col bg-gray-700/50 rounded-lg p-4 md:p-6">
                     <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
@@ -257,9 +260,9 @@ export default function Dashboard() {
                     </div>
 
                     {/* Chart Section */}
-                    <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
+                    {isGraphLoading ? <GraphSkeleton /> : <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
                       <SpendingChart labels={chartLabels} data={chartData} />
-                    </div>
+                    </div>}
                   </div>
 
                   {/* Balance Over Time Section */}
@@ -282,12 +285,12 @@ export default function Dashboard() {
                     </div>
 
                     {/* Chart Section */}
-                    <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
+                    {isGraphLoading ? <GraphSkeleton /> : <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
                       <BalanceChart
                         labels={balanceOverTimeLabels}
                         data={balanceOverTimeData}
                       />
-                    </div>
+                    </div>}
                   </div>
                 </div>
 
@@ -311,11 +314,10 @@ export default function Dashboard() {
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`p-2 rounded-lg ${
-                                transaction.transaction_type === "credit"
-                                  ? "bg-green-500/10"
-                                  : "bg-red-500/10"
-                              }`}
+                              className={`p-2 rounded-lg ${transaction.transaction_type === "credit"
+                                ? "bg-green-500/10"
+                                : "bg-red-500/10"
+                                }`}
                             >
                               {transaction.transaction_type === "credit" ? (
                                 <FiArrowUp className="text-green-500" />
@@ -329,11 +331,10 @@ export default function Dashboard() {
                           </div>
 
                           <span
-                            className={`font-semibold text-sm md:text-xl ${
-                              transaction.transaction_type === "credit"
-                                ? "text-green-500"
-                                : "text-red-500"
-                            }`}
+                            className={`font-semibold text-sm md:text-xl ${transaction.transaction_type === "credit"
+                              ? "text-green-500"
+                              : "text-red-500"
+                              }`}
                           >
                             {transaction.transaction_type === "credit"
                               ? "+"
