@@ -255,7 +255,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <label className="text-gray-400 text-sm">Age</label>
                       {isFetching ? (
-                        <TransactionLoading items={1} />
+                        <TransactionLoading items={1} width="w-36"/>
                       ) : (
                         <input
                           type="number"
@@ -273,7 +273,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <label className="text-gray-400 text-sm">Gender</label>
                       {isFetching ? (
-                        <TransactionLoading items={1} />
+                        <TransactionLoading items={1} width="w-36" />
                       ) : (
                         <select
                           name="gender"

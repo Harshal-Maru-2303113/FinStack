@@ -104,4 +104,33 @@ const sendOTP = async (email: string): Promise<boolean> => {
   }
 };
 
-export { sendOTP, verifyOTP };
+
+const sendPasswordResetEmail = async (email: string): Promise<boolean> => {
+  const otp = generateOTP();
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "FinStack - Password Change Code",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Password Change Verification</h2>
+        <p>Your verification code is: <strong>${otp}</strong></p>
+        <p>This code will expire in 10 minutes.</p>
+        <p>If you didn't request this code, please ignore this email.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    await saveOTP(email, otp);
+    return true;
+  }
+  catch (error) {
+    console.error("Error sending email:", error);
+    return false;
+  }
+};
+
+export { sendOTP, verifyOTP,sendPasswordResetEmail };

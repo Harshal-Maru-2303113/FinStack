@@ -66,10 +66,11 @@ export default function Dashboard() {
         setBalance(Number(transactions.data[0].balance));
         const FinanceData = await calculateMonthlyFinance(session.user.email);
         console.dir(FinanceData);
-        setIsFinanceValuesLoading(false);
         setIncome(FinanceData.totalIncome);
         setExpense(FinanceData.totalExpense);
       }
+      setIsFinanceValuesLoading(false);
+      setIsTransactionLoading(false);
     };
 
     fetchTransactions();
