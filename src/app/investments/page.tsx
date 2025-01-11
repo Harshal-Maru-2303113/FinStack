@@ -6,7 +6,7 @@ import {
   FiTrendingDown,
   FiPieChart,
 } from "react-icons/fi";
-import Navigation from "#/components/Navigation";
+import Navigation from "@/components/Navigation";
 
 export default function InvestmentsPage() {
   const investments = [

@@ -10,7 +10,7 @@ import {
   FiToggleRight,
 } from "react-icons/fi";
 import { useState } from "react";
-import Navigation from "#/components/Navigation";
+import Navigation from "@/components/Navigation";
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);

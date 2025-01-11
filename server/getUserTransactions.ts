@@ -1,7 +1,7 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { Transaction } from "@/utils/Calculate";
+import { Transaction } from "@/types/Transaction";
 import { categories } from "@/utils/categories";
 const prisma = new PrismaClient();
 

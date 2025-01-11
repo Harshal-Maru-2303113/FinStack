@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { FiPieChart, FiTrendingUp } from "react-icons/fi";
-import Navigation from "#/components/Navigation";
+import Navigation from "@/components/Navigation";
 
 export default function BudgetPage() {
   const categories = [
