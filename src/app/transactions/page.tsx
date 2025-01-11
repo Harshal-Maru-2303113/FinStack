@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FiFilter } from "react-icons/fi";
 import Navigation from "@/components/Navigation";
 import Link from "next/link";
-import { Transaction } from "@/types/Transaction";
+import { Transaction } from "@/utils/Calculate";
 import getUserTransactions from "@/../server/getUserTransactions";
 import { getSession } from "next-auth/react";
 import useFilters from "@/hooks/useFilters";

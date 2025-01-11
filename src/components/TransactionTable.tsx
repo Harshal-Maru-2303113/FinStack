@@ -48,7 +48,7 @@ export default function TransactionTable({
               </td>
             </tr>
           ) : (
-            transactions.map((transaction, index) => (
+            transactions.reverse().map((transaction, index) => (
               <motion.tr
                 key={transaction.transaction_id}
                 initial={{ opacity: 0, y: 20 }}
