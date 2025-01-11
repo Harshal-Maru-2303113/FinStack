@@ -1,4 +1,4 @@
-import { Transaction } from "@/utils/Calculate";
+import { Transaction } from "@/types/Transaction";
 
 interface TransactionModalProps {
   transaction: Transaction | null;
