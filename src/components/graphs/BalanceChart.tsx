@@ -61,7 +61,7 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
             pointBackgroundColor: "#2196f3",
             pointBorderColor: "#fff",
             fill: true, // Fill area under the line
-            tension: 0.4, // Curve smoothness
+            tension: 0, // Curve smoothness
           },
         ],
       },

@@ -63,6 +63,10 @@ export default function Dashboard() {
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
 
+  useEffect(()=>{
+    console.dir(transactionArray);
+  },[transactionArray])
+
   useEffect(() => {
     const fetchTransactions = async () => {
       const session = await getSession();
@@ -76,7 +80,6 @@ export default function Dashboard() {
       );
       if (transactions.success) {
         setTransactionArray(transactions.data);
-        setIsTransactionLoading(false);
         setBalance(Number(transactions.data[0].balance));
         const FinanceData = await calculateMonthlyFinance(session.user.email);
         setIncome(FinanceData.totalIncome);
@@ -241,9 +244,13 @@ export default function Dashboard() {
                         <TransactionLoading items={4} />
                       </div>
                     ) : (
-                      transactionArray.slice(0,8).map((transaction, index) => (
-                        <div
+                      transactionArray.slice(0,8).reverse().map((transaction, index) => (
+                        
+                        <motion.div
                           key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
                           className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
                           onClick={() => setPopupContent(transaction)}
                         >
@@ -276,7 +283,7 @@ export default function Dashboard() {
                               : "-"}
                             ${Number(transaction.amount).toFixed(2)}
                           </span>
-                        </div>
+                        </motion.div>
                       ))
                     )}
                   </div>

@@ -60,7 +60,15 @@ export default function SpendingChart({ labels, data }: SpendingChartProps) {
               "#ff9800", // Orange
               "#2196f3", // Blue
               "#9c27b0", // Purple
+              "#00bcd4", // Cyan
+              "#ffeb3b", // Yellow
+              "#e91e63", // Pink
+              "#8bc34a", // Light Green
+              "#3f51b5", // Indigo
+              "#795548", // Brown
+              "#607d8b", // Blue Grey
             ],
+            
             borderWidth: 1,
             hoverOffset: 10, // Highlight effect on hover
           },
