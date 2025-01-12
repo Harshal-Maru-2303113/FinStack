@@ -21,32 +21,11 @@ import TransactionModal from "@/components/TransactionModal";
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
 import SpendingChart from "@/components/graphs/SpendingChart";
 import BalanceChart from "@/components/graphs/BalanceChart";
-import {
-  Chart,
-  DoughnutController,
-  LineController,
-  LineElement,
-  PointElement,
-  LinearScale,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
-import GraphSkeleton from "@/components/GraphLoading";
+
+import processTransactionDates from "@/utils/processTransactionDates";
+import BarGraphSkeleton from "@/components/GraphLoading";
 
 // Register the required components
-Chart.register(
-  DoughnutController,
-  ArcElement,
-  LineController,
-  LineElement,
-  PointElement,
-  LinearScale,
-  Title,
-  Tooltip,
-  Legend
-);
 
 // Constants
 const QUICK_STATS = (amount: number, income: number, expense: number) => [
@@ -92,7 +71,7 @@ export default function Dashboard() {
       const transactions = await getUserTransactions(
         session.user.email,
         0,
-        4,
+        undefined,
         {} as filter
       );
       if (transactions.success) {
@@ -103,82 +82,30 @@ export default function Dashboard() {
         setIncome(FinanceData.totalIncome);
         setExpense(FinanceData.totalExpense);
 
-        const allTransactions = await getUserTransactions(
-          session.user.email,
-          0,
-          undefined,
-          {} as filter
-        );
-
-        if (allTransactions.success) {
-          const balances: number[] = [];
-          const date_result = processTransactionDates(allTransactions.data);
-          allTransactions.data.reverse().forEach((transaction: Transaction) => {
-            balances.push(Number(transaction.balance));
-          });
-          setBalanceOverTimeLabels(date_result);
-          setBalanceOverTimeData(balances);
-        }
-      }
-      setIsFinanceValuesLoading(false);
-      setIsTransactionLoading(false);
-    };
-    function processTransactionDates(
-      transactions: { date_time: string | Date }[]
-    ): string[] {
-      const dates: string[] = [];
-      const uniqueMonths = new Set<string>();
-
-      transactions.forEach((transaction) => {
-        const date = new Date(transaction.date_time);
-        const month = date.toLocaleString("default", { month: "long" }); // Full month name (e.g., "January")
-        uniqueMonths.add(month);
-      });
-
-      if (uniqueMonths.size > 1) {
-        // If transactions span multiple months, return only the months
-        transactions.forEach((transaction) => {
-          const date = new Date(transaction.date_time);
-          const month = date.toLocaleString("default", { month: "long" });
-          dates.push(month);
-        });
-      } else {
-        // If all transactions are in the same month, return full dates
-        transactions.forEach((transaction) => {
-          const date = new Date(transaction.date_time);
-          dates.push(date.toLocaleDateString()); // Format: "MM/DD/YYYY"
-        });
-      }
-
-      return dates;
-    }
-
-    const getChartData = async () => {
-      const session = await getSession();
-      if (!session) return;
-
-      const transactions = await getUserTransactions(
-        session.user.email,
-        0,
-        undefined,
-        {} as filter
-      );
-
-      if (transactions.success) {
         const categories: { [key: string]: number } = {};
         transactions.data.forEach((transaction: Transaction) => {
           const category = transaction.category_name || "Others";
           categories[category] =
             (categories[category] || 0) + Number(transaction.amount);
         });
+
+        const balances: number[] = [];
+        const date_result = processTransactionDates(transactions.data);
+        transactions.data.reverse().forEach((transaction: Transaction) => {
+          balances.push(Number(transaction.balance));
+        });
+        setBalanceOverTimeLabels(date_result.xAxis.labels.reverse());
+        setBalanceOverTimeData(balances);
+
         setIsGraphLoading(false);
         setChartLabels(Object.keys(categories));
         setChartData(Object.values(categories));
       }
+      setIsFinanceValuesLoading(false);
+      setIsTransactionLoading(false);
     };
 
     fetchTransactions();
-    getChartData();
   }, []);
 
   return (
@@ -241,7 +168,7 @@ export default function Dashboard() {
                 <div className="hidden md:flex xl:col-span-2 flex-col lg:flex-row justify-between items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
 
                   {/* Spending Analytics Section */}
-                  <div className="flex-1 flex flex-col bg-gray-700/50 rounded-lg p-4 md:p-6">
+                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
                     <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
                       Spending Analytics
                     </h2>
@@ -260,13 +187,17 @@ export default function Dashboard() {
                     </div>
 
                     {/* Chart Section */}
-                    {isGraphLoading ? <GraphSkeleton /> : <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
-                      <SpendingChart labels={chartLabels} data={chartData} />
-                    </div>}
+                    {isGraphLoading ? (
+                      <BarGraphSkeleton />
+                    ) : (
+                      <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <SpendingChart labels={chartLabels} data={chartData} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Balance Over Time Section */}
-                  <div className="flex-1 flex flex-col bg-gray-700/50 rounded-lg p-4 md:p-6">
+                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
                     <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
                       Balance Over Time
                     </h2>
@@ -285,12 +216,16 @@ export default function Dashboard() {
                     </div>
 
                     {/* Chart Section */}
-                    {isGraphLoading ? <GraphSkeleton /> : <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center shadow-md">
-                      <BalanceChart
-                        labels={balanceOverTimeLabels}
-                        data={balanceOverTimeData}
-                      />
-                    </div>}
+                    {isGraphLoading ? (
+                      <BarGraphSkeleton />
+                    ) : (
+                      <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <BalanceChart
+                          labels={balanceOverTimeLabels}
+                          data={balanceOverTimeData}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -306,7 +241,7 @@ export default function Dashboard() {
                         <TransactionLoading items={4} />
                       </div>
                     ) : (
-                      transactionArray.map((transaction, index) => (
+                      transactionArray.slice(0,8).map((transaction, index) => (
                         <div
                           key={index}
                           className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"

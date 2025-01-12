@@ -1,7 +1,33 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Chart, ChartConfiguration } from "chart.js";
+import {
+  Chart,
+  DoughnutController,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  CategoryScale,
+  ChartConfiguration,
+} from "chart.js";
+
+Chart.register(
+  DoughnutController,
+  ArcElement,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface SpendingChartProps {
   labels: string[]; // Categories or months
@@ -36,11 +62,13 @@ export default function SpendingChart({ labels, data }: SpendingChartProps) {
               "#9c27b0", // Purple
             ],
             borderWidth: 1,
+            hoverOffset: 10, // Highlight effect on hover
           },
         ],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // Makes the chart responsive to container size
         plugins: {
           legend: {
             display: true,
@@ -57,8 +85,26 @@ export default function SpendingChart({ labels, data }: SpendingChartProps) {
             bodyFont: {
               size: 14, // Larger font size for tooltips
             },
+            callbacks: {
+              label: (tooltipItem) => {
+                // Format the tooltip label with percentage
+                const dataset = tooltipItem.dataset;
+                const currentValue = dataset.data[tooltipItem.dataIndex] as number;
+                const total = (dataset.data as number[]).reduce((acc, val) => acc + val, 0);
+                const percentage = ((currentValue / total) * 100).toFixed(2);
+                return `${tooltipItem.label}: ${currentValue} (${percentage}%)`;
+              },
+            },
           },
         },
+        animation: {
+          duration: 1000, // Animation duration in milliseconds
+          easing: "easeInOutQuad", // Smooth easing for animations
+          onProgress: undefined, // Optional: Event handler during animation
+          onComplete: undefined, // Optional: Event handler after animation completes
+        },
+        
+
       },
     };
 
@@ -66,5 +112,11 @@ export default function SpendingChart({ labels, data }: SpendingChartProps) {
     chartInstanceRef.current = new Chart(chartRef.current, config);
   }, [labels, data]);
 
-  return <canvas ref={chartRef} />;
+  return (
+    <div
+    className="relative w-full max-w-700px h-auto"
+    >
+      <canvas ref={chartRef} />
+    </div>
+  );
 }

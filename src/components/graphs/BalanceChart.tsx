@@ -1,11 +1,37 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Chart, ChartConfiguration, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend } from "chart.js";
+import {
+  Chart,
+  DoughnutController,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  CategoryScale,
+  ChartConfiguration,
+} from "chart.js";
+
+Chart.register(
+  DoughnutController,
+  ArcElement,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface BalanceChartProps {
   labels: string[]; // Time periods (e.g., months, weeks)
-  data: number[];   // Balance amounts for each label
+  data: number[]; // Balance amounts for each label
 }
 
 export default function BalanceChart({ labels, data }: BalanceChartProps) {
@@ -19,9 +45,6 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
-
-    // Register Chart.js components
-    Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
     // Chart configuration
     const config: ChartConfiguration = {
@@ -44,6 +67,7 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // Allow chart to resize based on container
         plugins: {
           legend: {
             display: true,
@@ -107,5 +131,10 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
     chartInstanceRef.current = new Chart(chartRef.current, config);
   }, [labels, data]);
 
-  return <canvas ref={chartRef} />;
+  return (
+    <div className="relative w-full h-80 md:h-96 lg:h-112">
+      {/* The canvas is now wrapped in a responsive container */}
+      <canvas ref={chartRef} className="w-full h-full" />
+    </div>
+  );
 }
