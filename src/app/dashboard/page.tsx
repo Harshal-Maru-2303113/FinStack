@@ -19,11 +19,12 @@ import { filter } from "@/../server/getUserTransactions";
 import truncateDescription from "@/utils/truncateDescription";
 import TransactionModal from "@/components/TransactionModal";
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
-import SpendingChart from "@/components/graphs/SpendingChart";
+import SpendingChartByCategories from "@/components/graphs/SpendingChartByCategories";
 import BalanceChart from "@/components/graphs/BalanceChart";
 
-import processTransactionDates from "@/utils/processTransactionDates";
 import BarGraphSkeleton from "@/components/GraphLoading";
+import ProcessTransactionData from "@/utils/processTransactionData";
+import { AggregateTransactionData } from "@/utils/AggregateTransactionData";
 
 // Register the required components
 
@@ -63,9 +64,9 @@ export default function Dashboard() {
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
 
-  useEffect(()=>{
+  useEffect(() => {
     console.dir(transactionArray);
-  },[transactionArray])
+  }, [transactionArray])
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -79,7 +80,7 @@ export default function Dashboard() {
         {} as filter
       );
       if (transactions.success) {
-        setTransactionArray(transactions.data);
+        setTransactionArray(transactions.data.reverse());
         setBalance(Number(transactions.data[0].balance));
         const FinanceData = await calculateMonthlyFinance(session.user.email);
         setIncome(FinanceData.totalIncome);
@@ -92,12 +93,25 @@ export default function Dashboard() {
             (categories[category] || 0) + Number(transaction.amount);
         });
 
+        const processTransactions = ProcessTransactionData(transactions.data);
+        const AggregatedData = await AggregateTransactionData(processTransactions);
+
+
         const balances: number[] = [];
-        const date_result = processTransactionDates(transactions.data);
-        transactions.data.reverse().forEach((transaction: Transaction) => {
-          balances.push(Number(transaction.balance));
-        });
-        setBalanceOverTimeLabels(date_result.xAxis.labels.reverse());
+        const dateLabel: string[] = [];
+
+        if (Object.keys(AggregatedData).length === 1) {
+          const year = Number(Object.keys(AggregatedData)[0]);
+          if (Object.keys(AggregatedData[year]).length === 1) {
+            const month = Object.keys(AggregatedData[year])[0];
+            const days = AggregatedData[year][month];
+            Object.entries(days).forEach(([day, Data]) => {
+              dateLabel.push(String(day)); // Add the day to dateLabel
+              balances.push(Number(Data.balance[0]))
+            });
+          }
+        }
+        setBalanceOverTimeLabels(dateLabel);
         setBalanceOverTimeData(balances);
 
         setIsGraphLoading(false);
@@ -168,7 +182,7 @@ export default function Dashboard() {
               {/* Main Content */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
                 {/* Chart Section */}
-                <div className="hidden md:flex xl:col-span-2 flex-col lg:flex-row justify-between items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
+                <div className="hidden md:flex xl:col-span-2 flex-col lg:flex-row justify-evenly items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
 
                   {/* Spending Analytics Section */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -194,7 +208,7 @@ export default function Dashboard() {
                       <BarGraphSkeleton />
                     ) : (
                       <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                        <SpendingChart labels={chartLabels} data={chartData} />
+                        <SpendingChartByCategories labels={chartLabels} data={chartData} />
                       </div>
                     )}
                   </div>
@@ -244,13 +258,13 @@ export default function Dashboard() {
                         <TransactionLoading items={4} />
                       </div>
                     ) : (
-                      transactionArray.slice(0,8).reverse().map((transaction, index) => (
-                        
+                      transactionArray.slice(0, 8).reverse().map((transaction, index) => (
+
                         <motion.div
                           key={index}
                           initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
                           className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
                           onClick={() => setPopupContent(transaction)}
                         >

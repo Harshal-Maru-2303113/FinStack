@@ -34,7 +34,7 @@ interface SpendingChartProps {
   data: number[];   // Spending amounts for each label
 }
 
-export default function SpendingChart({ labels, data }: SpendingChartProps) {
+export default function SpendingChartByCategories({ labels, data }: SpendingChartProps) {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
