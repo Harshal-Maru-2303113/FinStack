@@ -68,15 +68,14 @@ export default function SpendingChartByCategories({ labels, data }: SpendingChar
               "#795548", // Brown
               "#607d8b", // Blue Grey
             ],
-            
-            borderWidth: 1,
-            hoverOffset: 10, // Highlight effect on hover
+            borderWidth: 2,
+            hoverOffset: 15, // Highlight effect on hover
           },
         ],
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false, // Makes the chart responsive to container size
+        maintainAspectRatio: false,
         plugins: {
           legend: {
             display: true,
@@ -84,35 +83,34 @@ export default function SpendingChartByCategories({ labels, data }: SpendingChar
             labels: {
               color: "#fff", // White text for legend
               font: {
-                size: 16, // Larger font size for legend
+                size: 14,
               },
             },
           },
           tooltip: {
             enabled: true,
-            bodyFont: {
-              size: 14, // Larger font size for tooltips
-            },
             callbacks: {
               label: (tooltipItem) => {
-                // Format the tooltip label with percentage
                 const dataset = tooltipItem.dataset;
-                const currentValue = dataset.data[tooltipItem.dataIndex] as number;
+                const value = dataset.data[tooltipItem.dataIndex] as number;
                 const total = (dataset.data as number[]).reduce((acc, val) => acc + val, 0);
-                const percentage = ((currentValue / total) * 100).toFixed(2);
-                return `${tooltipItem.label}: ${currentValue} (${percentage}%)`;
+                const percentage = ((value / total) * 100).toFixed(2);
+                return `${tooltipItem.label}: ${value} (${percentage}%)`;
               },
             },
           },
         },
         animation: {
-          duration: 1000, // Animation duration in milliseconds
-          easing: "easeInOutQuad", // Smooth easing for animations
-          onProgress: undefined, // Optional: Event handler during animation
-          onComplete: undefined, // Optional: Event handler after animation completes
+          duration: 1500,      // Duration in milliseconds
+          easing: "easeOutBounce",
         },
-        
-
+        onHover: (event, elements) => {
+          if (elements.length) {
+            (event.native?.target as HTMLElement)?.style?.setProperty("cursor", "pointer");
+          } else {
+            (event.native?.target as HTMLElement)?.style?.setProperty("cursor", "default");
+          }
+        },
       },
     };
 
@@ -122,9 +120,9 @@ export default function SpendingChartByCategories({ labels, data }: SpendingChar
 
   return (
     <div
-    className="relative w-full max-w-700px h-auto"
+    className="relative w-full h-80 md:h-96 lg:h-112"
     >
-      <canvas ref={chartRef} />
+      <canvas ref={chartRef}  />
     </div>
   );
 }
