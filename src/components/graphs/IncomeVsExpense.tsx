@@ -27,12 +27,14 @@ interface IncomeExpenseChartProps {
   labels: string[]; // Categories or months
   incomeData: number[]; // Income data
   expenseData: number[]; // Expense data
+  timePeriod: string;
 }
 
 export default function IncomeExpenseChart({
   labels,
   incomeData,
   expenseData,
+  timePeriod = "Time Period",
 }: IncomeExpenseChartProps) {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
@@ -86,10 +88,10 @@ export default function IncomeExpenseChart({
           x: {
             title: {
               display: true,
-              text: "Categories",
+              text: timePeriod,
               color: "#fff",
               font: {
-                size: 16,
+                size: 20,
               },
             },
             ticks: {
@@ -117,11 +119,15 @@ export default function IncomeExpenseChart({
             beginAtZero: true,
           },
         },
+        animation: {
+          duration: 1500, // Animation duration in milliseconds
+          easing: "easeInOutQuad", // Easing function for the animation
+        },
       },
     };
 
     chartInstanceRef.current = new Chart(chartRef.current, config);
-  }, [labels, incomeData, expenseData]);
+  }, [labels, incomeData, expenseData,timePeriod]);
 
   return (
     <div className="relative w-full h-80 md:h-96 lg:h-112">

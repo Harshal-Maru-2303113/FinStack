@@ -99,7 +99,7 @@ export default function HeroPage() {
               transition: { duration: 0.2 },
             }}
           >
-            Welcome to ClarityFi
+            Welcome to FinStack
           </motion.h1>
           <motion.p
             variants={fadeInUp}

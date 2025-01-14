@@ -34,14 +34,20 @@ const staggerContainer = {
 export default function AnalyticsPage() {
   const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
   const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
-  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>([]);
+  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
+    []
+  );
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [incomeChartLabels, setIncomeChartLabels] = useState<string[]>([]);
   const [incomeChartData, setIncomeChartData] = useState<number[]>([]);
-  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>([]);
+  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>(
+    []
+  );
   const [incomeData, setIncomeData] = useState<number[]>([]);
   const [expenseData, setExpenseData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
+  const [GraphDate, setGraphDate] = useState<string>("Harshal");
+  const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -56,15 +62,14 @@ export default function AnalyticsPage() {
       );
 
       if (transactions.success) {
+        setTransactionArray(transactions.data);
         const processTransactions = ProcessTransactionData(transactions.data);
-        const AggregatedData = await AggregateTransactionData(processTransactions);
-
+        const AggregatedData = await AggregateTransactionData(
+          processTransactions
+        );
 
         const spendingSources: { [key: string]: number } = {};
         const incomeSources: { [key: string]: number } = {};
-
-
-
 
         transactions.data.forEach((transaction: Transaction) => {
           const category = transaction.category_name || "Others";
@@ -74,13 +79,14 @@ export default function AnalyticsPage() {
           if (isCredit) {
             incomeSources[category] = (incomeSources[category] || 0) + amount;
           } else {
-            spendingSources[category] = (spendingSources[category] || 0) + amount;
+            spendingSources[category] =
+              (spendingSources[category] || 0) + amount;
           }
         });
 
         const balances: number[] = [];
         const income: number[] = [];
-        const expense: number[] = []
+        const expense: number[] = [];
         const dateLabel: string[] = [];
 
         if (Object.keys(AggregatedData).length === 1) {
@@ -90,15 +96,42 @@ export default function AnalyticsPage() {
             const days = AggregatedData[year][month];
             Object.entries(days).forEach(([day, Data]) => {
               dateLabel.push(String(day)); // Add the day to dateLabel
-              balances.push(Number(Data.balance[0]))
-              income.push(Number(Data.income[0]))
-              expense.push(Number(Data.expense[0]))
+              balances.push(Number(Data.balance[0]));
+              income.push(Number(Data.income[0]));
+              expense.push(Number(Data.expense[0]));
+              setGraphDate(month + " " + year);
+            });
+          } else {
+            const months = Object.keys(AggregatedData[year]);
+            Object.entries(months).forEach(([month]) => {
+              const days = AggregatedData[year][month];
+              Object.entries(days).forEach(([day, Data]) => {
+                dateLabel.push(String(day) + " " + month);
+                balances.push(Number(Data.balance[0]));
+                income.push(Number(Data.income[0]));
+                expense.push(Number(Data.expense[0]));
+                setGraphDate(String(year));
+              });
             });
           }
+        } else {
+          const years = Number(Object.keys(AggregatedData));
+          Object.entries(years).forEach(([year]) => {
+            const months = Object.keys(AggregatedData[Number(year)]);
+            Object.entries(months).forEach(([month]) => {
+              const days = AggregatedData[Number(year)][month];
+              Object.entries(days).forEach(([day, Data]) => {
+                dateLabel.push(String(day) + " " + month + "" + String(year));
+                balances.push(Number(Data.balance[0]));
+                income.push(Number(Data.income[0]));
+                expense.push(Number(Data.expense[0]));
+              });
+            });
+          });
         }
-        console.dir(dateLabel);
-        console.dir(balances)
 
+        console.dir(dateLabel);
+        console.dir(balances);
 
         setBalanceOverTimeLabels(dateLabel);
         setBalanceOverTimeData(balances);
@@ -107,8 +140,8 @@ export default function AnalyticsPage() {
         setIncomeChartLabels(Object.keys(incomeSources));
         setIncomeChartData(Object.values(incomeSources));
         setIncomeVsExpenseLabels(dateLabel);
-        setIncomeData(income)
-        setExpenseData(expense)
+        setIncomeData(income);
+        setExpenseData(expense);
         setIsGraphLoading(false);
       }
     };
@@ -118,7 +151,6 @@ export default function AnalyticsPage() {
 
   const Total_Spending = spendingChartData.reduce((acc, curr) => acc + curr, 0);
   const Total_Income = incomeChartData.reduce((acc, curr) => acc + curr, 0);
-  const Current_Balance = balanceOverTimeData[balanceOverTimeData.length - 1];
 
   return (
     <div className="flex">
@@ -133,10 +165,12 @@ export default function AnalyticsPage() {
             <div className="bg-gray-900 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
               {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <motion.h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" variants={fadeInUp}>
+                <motion.h1
+                  className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent"
+                  variants={fadeInUp}
+                >
                   Analytics
                 </motion.h1>
-
               </div>
 
               {/* Quick Stats */}
@@ -146,11 +180,16 @@ export default function AnalyticsPage() {
                 initial="initial"
                 animate="animate"
               >
-                <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-8" variants={fadeInUp}>
+                <motion.div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                  variants={fadeInUp}
+                >
                   {/* Spending Analytics */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold text-white mb-4">Spending Analytics</h2>
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                    <h2 className="text-xl font-semibold text-white mb-4">
+                      Spending Analytics
+                    </h2>
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
                       <span className="text-gray-400 text-sm md:text-base">
                         Total Spending:
                       </span>
@@ -158,9 +197,16 @@ export default function AnalyticsPage() {
                         ${Total_Spending?.toFixed(2) || "0.00"}
                       </span>
                     </div>
-                    {isGraphLoading ? <BarGraphSkeleton /> : <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                      <SpendingChartByCategories labels={spendingChartLabels} data={spendingChartData} />
-                    </div>}
+                    {isGraphLoading ? (
+                      <BarGraphSkeleton />
+                    ) : (
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <SpendingChartByCategories
+                          labels={spendingChartLabels}
+                          data={spendingChartData}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Balance Over Time */}
@@ -169,29 +215,37 @@ export default function AnalyticsPage() {
                       Balance Over Time
                     </h2>
 
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
                       <span className="text-gray-400 text-sm md:text-base">
                         Current Balance:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        ${Current_Balance?.toFixed(2) || "0.00"}
+                        $
+                        {isNaN(Number(transactionArray[0]?.balance))
+                          ? "0.00"
+                          : Number(transactionArray[0]?.balance).toFixed(2)}
                       </span>
                     </div>
 
                     {isGraphLoading ? (
                       <BarGraphSkeleton />
                     ) : (
-                      <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                        <BalanceChart labels={balanceOverTimeLabels} data={balanceOverTimeData} />
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <BalanceChart
+                          labels={balanceOverTimeLabels}
+                          data={balanceOverTimeData}
+                          timePeriod={GraphDate}
+                        />
                       </div>
                     )}
                   </div>
 
-
                   {/* Income Distribution */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold text-white mb-4">Income Distribution</h2>
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                    <h2 className="text-xl font-semibold text-white mb-4">
+                      Income Distribution
+                    </h2>
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
                       <span className="text-gray-400 text-sm md:text-base">
                         Total Income:
                       </span>
@@ -199,20 +253,38 @@ export default function AnalyticsPage() {
                         ${Total_Income?.toFixed(2) || "0.00"}
                       </span>
                     </div>
-                    {isGraphLoading ? <BarGraphSkeleton /> : <IncomeDistributionChart labels={incomeChartLabels} data={incomeChartData} />}
+                    {isGraphLoading ? (
+                      <BarGraphSkeleton />
+                    ) : (
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <IncomeDistributionChart
+                          labels={incomeChartLabels}
+                          data={incomeChartData}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Expense Over Time */}
 
                   {/* Income vs Expense */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold text-white mb-4">Income vs Expense</h2>
-                    {isGraphLoading ? <BarGraphSkeleton /> : <IncomeVsExpenseChart
-                      labels={incomeVsExpenseLabels}
-                      incomeData={incomeData}
-                      expenseData={expenseData}
-                    />
-                    }
+                    <h2 className="text-xl font-semibold text-white mb-4">
+                      Income vs Expense
+                    </h2>
+
+                    {isGraphLoading ? (
+                      <BarGraphSkeleton />
+                    ) : (
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <IncomeVsExpenseChart
+                          labels={incomeVsExpenseLabels}
+                          incomeData={incomeData}
+                          expenseData={expenseData}
+                          timePeriod={GraphDate}
+                        />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>

@@ -32,9 +32,14 @@ Chart.register(
 interface BalanceChartProps {
   labels: string[]; // Time periods (e.g., months, weeks)
   data: number[]; // Balance amounts for each label
+  timePeriod: string;
 }
 
-export default function BalanceChart({ labels, data }: BalanceChartProps) {
+export default function BalanceChart({
+  labels,
+  data,
+  timePeriod = "Time Period",
+}: BalanceChartProps) {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
@@ -93,10 +98,10 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
           x: {
             title: {
               display: true,
-              text: "Time Period",
+              text: timePeriod,
               color: "#fff", // White color for X-axis title
               font: {
-                size: 16, // Larger font size for X-axis title
+                size: 20, // Larger font size for X-axis title
               },
             },
             ticks: {
@@ -124,12 +129,16 @@ export default function BalanceChart({ labels, data }: BalanceChartProps) {
             beginAtZero: true,
           },
         },
+        animation: {
+          duration: 2000, // Animation duration in milliseconds
+          easing: "easeInOutQuad", // Easing function for animation
+        },
       },
     };
 
     // Initialize chart
     chartInstanceRef.current = new Chart(chartRef.current, config);
-  }, [labels, data]);
+  }, [labels, data,timePeriod]);
 
   return (
     <div className="relative w-full h-80 md:h-96 lg:h-112">

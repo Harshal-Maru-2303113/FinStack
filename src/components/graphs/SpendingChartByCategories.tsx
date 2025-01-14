@@ -102,7 +102,7 @@ export default function SpendingChartByCategories({ labels, data }: SpendingChar
         },
         animation: {
           duration: 1500,      // Duration in milliseconds
-          easing: "easeOutBounce",
+          easing: "easeInOutQuad",
         },
         onHover: (event, elements) => {
           if (elements.length) {

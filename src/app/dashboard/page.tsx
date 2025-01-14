@@ -56,17 +56,18 @@ export default function Dashboard() {
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
   const [isFinanceValuesLoading, setIsFinanceValuesLoading] = useState(true);
 
-  const [chartLabels, setChartLabels] = useState<string[]>([]);
-  const [chartData, setChartData] = useState<number[]>([]);
+  const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
+  const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
   const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
     []
   );
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
+  const [GraphDate, setGraphDate] = useState<string>("Time Period");
 
   useEffect(() => {
     console.dir(transactionArray);
-  }, [transactionArray])
+  }, [transactionArray]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -81,21 +82,28 @@ export default function Dashboard() {
       );
       if (transactions.success) {
         setTransactionArray(transactions.data.reverse());
-        setBalance(Number(transactions.data[0].balance));
+        setBalance(
+          Number(transactions.data[transactions.data.length - 1].balance)
+        );
         const FinanceData = await calculateMonthlyFinance(session.user.email);
         setIncome(FinanceData.totalIncome);
         setExpense(FinanceData.totalExpense);
 
-        const categories: { [key: string]: number } = {};
+        const spendingSources: { [key: string]: number } = {};
         transactions.data.forEach((transaction: Transaction) => {
           const category = transaction.category_name || "Others";
-          categories[category] =
-            (categories[category] || 0) + Number(transaction.amount);
+          const isCredit =
+            transaction.transaction_type === "credit" ? true : false;
+          if (!isCredit) {
+            spendingSources[category] =
+              (spendingSources[category] || 0) + Number(transaction.amount);
+          }
         });
 
         const processTransactions = ProcessTransactionData(transactions.data);
-        const AggregatedData = await AggregateTransactionData(processTransactions);
-
+        const AggregatedData = await AggregateTransactionData(
+          processTransactions
+        );
 
         const balances: number[] = [];
         const dateLabel: string[] = [];
@@ -107,16 +115,40 @@ export default function Dashboard() {
             const days = AggregatedData[year][month];
             Object.entries(days).forEach(([day, Data]) => {
               dateLabel.push(String(day)); // Add the day to dateLabel
-              balances.push(Number(Data.balance[0]))
+              balances.push(Number(Data.balance[0]));
+              setGraphDate(month + " " + year);
+            });
+          } else {
+            const months = Object.keys(AggregatedData[year]);
+            Object.entries(months).forEach(([month]) => {
+              const days = AggregatedData[year][month];
+              Object.entries(days).forEach(([day, Data]) => {
+                dateLabel.push(String(day) + " " + month);
+                balances.push(Number(Data.balance[0]));
+                setGraphDate(String(year));
+              });
             });
           }
+        } else {
+          const years = Number(Object.keys(AggregatedData));
+          Object.entries(years).forEach(([year]) => {
+            const months = Object.keys(AggregatedData[Number(year)]);
+            Object.entries(months).forEach(([month]) => {
+              const days = AggregatedData[Number(year)][month];
+              Object.entries(days).forEach(([day, Data]) => {
+                dateLabel.push(String(day) + " " + month + " " + String(year));
+                balances.push(Number(Data.balance[0]));
+              });
+            });
+          });
         }
+
         setBalanceOverTimeLabels(dateLabel);
         setBalanceOverTimeData(balances);
 
         setIsGraphLoading(false);
-        setChartLabels(Object.keys(categories));
-        setChartData(Object.values(categories));
+        setSpendingChartLabels(Object.keys(spendingSources));
+        setSpendingChartData(Object.values(spendingSources));
       }
       setIsFinanceValuesLoading(false);
       setIsTransactionLoading(false);
@@ -124,6 +156,7 @@ export default function Dashboard() {
 
     fetchTransactions();
   }, []);
+  const Total_Spending = spendingChartData.reduce((acc, curr) => acc + curr, 0);
 
   return (
     <div className="flex">
@@ -183,7 +216,6 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
                 {/* Chart Section */}
                 <div className="hidden md:flex xl:col-span-2 flex-col lg:flex-row justify-evenly items-stretch bg-gray-800 p-4 md:p-6 rounded-xl border border-gray-700 gap-6">
-
                   {/* Spending Analytics Section */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
                     <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
@@ -191,15 +223,12 @@ export default function Dashboard() {
                     </h2>
 
                     {/* Total Spending Tab */}
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
                       <span className="text-gray-400 text-sm md:text-base">
                         Total Spending:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        $
-                        {chartData
-                          .reduce((total, amount) => total + amount, 0)
-                          .toFixed(2)}
+                        ${Total_Spending?.toFixed(2)}
                       </span>
                     </div>
 
@@ -207,8 +236,11 @@ export default function Dashboard() {
                     {isGraphLoading ? (
                       <BarGraphSkeleton />
                     ) : (
-                      <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                        <SpendingChartByCategories labels={chartLabels} data={chartData} />
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                        <SpendingChartByCategories
+                          labels={spendingChartLabels}
+                          data={spendingChartData}
+                        />
                       </div>
                     )}
                   </div>
@@ -220,15 +252,15 @@ export default function Dashboard() {
                     </h2>
 
                     {/* Current Balance Tab */}
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-md">
+                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
                       <span className="text-gray-400 text-sm md:text-base">
                         Current Balance:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
                         $
-                        {balanceOverTimeData[
-                          balanceOverTimeData.length - 1
-                        ]?.toFixed(2) || "0.00"}
+                        {isNaN(Number(transactionArray[0]?.balance))
+                          ? "0.00"
+                          : Number(transactionArray[0]?.balance).toFixed(2)}
                       </span>
                     </div>
 
@@ -236,10 +268,11 @@ export default function Dashboard() {
                     {isGraphLoading ? (
                       <BarGraphSkeleton />
                     ) : (
-                      <div className="relative bg-gray-800 rounded-lg shadow-md p-4 md:p-6 lg:p-8 flex items-center justify-center">
+                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
                         <BalanceChart
                           labels={balanceOverTimeLabels}
                           data={balanceOverTimeData}
+                          timePeriod={GraphDate}
                         />
                       </div>
                     )}
@@ -258,47 +291,51 @@ export default function Dashboard() {
                         <TransactionLoading items={4} />
                       </div>
                     ) : (
-                      transactionArray.slice(0, 8).reverse().map((transaction, index) => (
-
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
-                          onClick={() => setPopupContent(transaction)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-lg ${transaction.transaction_type === "credit"
-                                ? "bg-green-500/10"
-                                : "bg-red-500/10"
-                                }`}
-                            >
-                              {transaction.transaction_type === "credit" ? (
-                                <FiArrowUp className="text-green-500" />
-                              ) : (
-                                <FiArrowDown className="text-red-500" />
-                              )}
-                            </div>
-                            <span className="text-white text-sm md:text-xl">
-                              {truncateDescription(transaction.description)}
-                            </span>
-                          </div>
-
-                          <span
-                            className={`font-semibold text-sm md:text-xl ${transaction.transaction_type === "credit"
-                              ? "text-green-500"
-                              : "text-red-500"
-                              }`}
+                      transactionArray
+                        .slice(-8)
+                        .reverse()
+                        .map((transaction, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-700/50 rounded-lg transition-all cursor-pointer"
+                            onClick={() => setPopupContent(transaction)}
                           >
-                            {transaction.transaction_type === "credit"
-                              ? "+"
-                              : "-"}
-                            ${Number(transaction.amount).toFixed(2)}
-                          </span>
-                        </motion.div>
-                      ))
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`p-2 rounded-lg ${
+                                  transaction.transaction_type === "credit"
+                                    ? "bg-green-500/10"
+                                    : "bg-red-500/10"
+                                }`}
+                              >
+                                {transaction.transaction_type === "credit" ? (
+                                  <FiArrowUp className="text-green-500" />
+                                ) : (
+                                  <FiArrowDown className="text-red-500" />
+                                )}
+                              </div>
+                              <span className="text-white text-sm md:text-xl">
+                                {truncateDescription(transaction.description)}
+                              </span>
+                            </div>
+
+                            <span
+                              className={`font-semibold text-sm md:text-xl ${
+                                transaction.transaction_type === "credit"
+                                  ? "text-green-500"
+                                  : "text-red-500"
+                              }`}
+                            >
+                              {transaction.transaction_type === "credit"
+                                ? "+"
+                                : "-"}
+                              ${Number(transaction.amount).toFixed(2)}
+                            </span>
+                          </motion.div>
+                        ))
                     )}
                   </div>
                   <TransactionModal
