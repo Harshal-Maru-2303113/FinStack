@@ -1,36 +1,59 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiPieChart, FiTrendingUp } from "react-icons/fi";
 import Navigation from "@/components/Navigation";
+import { categories } from "@/utils/categories"; // Importing categories
+import BudgetCard from "@/components/BudgetCard";
+import BudgetModal from "@/components/BudgetModal";
 
 export default function BudgetPage() {
-  const categories = [
-    {
-      name: "Housing",
-      allocated: 2000,
-      spent: 1800,
-      color: "from-blue-500 to-purple-600",
-    },
-    {
-      name: "Food",
-      allocated: 600,
-      spent: 450,
-      color: "from-green-500 to-emerald-600",
-    },
-    {
-      name: "Transportation",
-      allocated: 400,
-      spent: 380,
-      color: "from-yellow-500 to-orange-600",
-    },
-    {
-      name: "Entertainment",
-      allocated: 300,
-      spent: 250,
-      color: "from-pink-500 to-rose-600",
-    },
-  ];
+  const [categoryData, setCategoryData] = useState(
+    categories.map((category) => ({
+      ...category,
+      allocated: 0,
+      spent: 0,
+    }))
+  );
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [amount, setAmount] = useState<number>(0);
+  const [isEditMode, setIsEditMode] = useState(false); // New state for Edit mode
+
+  // Handle Budget Change (Allocate or Update)
+  const handleBudgetChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const newCategoryData = [...categoryData];
+    newCategoryData[index].allocated = parseFloat(event.target.value);
+    setCategoryData(newCategoryData);
+  };
+
+  const handleAddBudget = () => {
+    if (selectedCategory !== null && amount > 0) {
+      const updatedCategoryData = [...categoryData];
+      updatedCategoryData[selectedCategory].allocated = amount;
+      setCategoryData(updatedCategoryData);
+      setIsModalOpen(false);
+      setSelectedCategory(null);
+      setAmount(0);
+      setIsEditMode(false); // Reset edit mode
+    }
+  };
+
+  const handleEditBudget = (categoryId: number) => {
+    const category = categoryData.find((cat) => cat.category_id === categoryId);
+    if (category) {
+      setSelectedCategory(categoryId);
+      setAmount(category.allocated);
+      setIsEditMode(true);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleRemoveBudget = (categoryId: number) => {
+    const newCategoryData = categoryData.filter((cat) => cat.category_id !== categoryId);
+    setCategoryData(newCategoryData);
+  };
 
   return (
     <div className="flex">
@@ -43,71 +66,51 @@ export default function BudgetPage() {
             className="max-w-[1400px] mx-auto"
           >
             <div className="grid gap-6">
-              {/* Overview Card */}
-              <div className="bg-gray-900 rounded-2xl shadow-xl p-6">
-                <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mb-6">
-                  Budget Overview
-                </h1>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {categories.map((category, index) => (
-                    <motion.div
-                      key={category.name}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-gray-800 rounded-xl p-4 border border-gray-700"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-white font-semibold">
-                          {category.name}
-                        </h3>
-                        <span className="text-gray-400 text-sm">
-                          ${category.spent}/${category.allocated}
-                        </span>
-                      </div>
-
-                      <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${
-                              (category.spent / category.allocated) * 100
-                            }%`,
-                          }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                          className={`absolute h-full bg-gradient-to-r ${category.color}`}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+              {/* Add Budget Button */}
+              <div className="flex justify-between items-center mb-6">
+                <motion.button
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-all"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Add Budget
+                </motion.button>
               </div>
 
-              {/* Monthly Breakdown */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-gray-900 rounded-2xl shadow-xl p-6">
-                  <h2 className="text-xl font-semibold text-white mb-4">
-                    Monthly Breakdown
-                  </h2>
-                  <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center">
-                    <FiPieChart size={48} className="text-gray-600" />
-                  </div>
-                </div>
-
-                <div className="bg-gray-900 rounded-2xl shadow-xl p-6">
-                  <h2 className="text-xl font-semibold text-white mb-4">
-                    Spending Trends
-                  </h2>
-                  <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center">
-                    <FiTrendingUp size={48} className="text-gray-600" />
-                  </div>
-                </div>
+              {/* Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {categoryData.map(
+                  (category, index) =>
+                    category.allocated > 0 && (
+                      <BudgetCard
+                        key={category.category_id}
+                        category={category}
+                        index={index}
+                        onEdit={handleEditBudget}
+                        onRemove={handleRemoveBudget}
+                        onBudgetChange={handleBudgetChange}
+                      />
+                    )
+                )}
               </div>
             </div>
           </motion.div>
         </div>
       </div>
+
+      {/* Budget Modal */}
+      {isModalOpen && (
+        <BudgetModal
+          isOpen={isModalOpen}
+          setIsOpen={setIsModalOpen}
+          selectedCategory={selectedCategory}
+          amount={amount}
+          setAmount={setAmount}
+          handleAddBudget={handleAddBudget}
+          isEditMode={isEditMode}
+          categories={categories} // Pass categories here
+          setSelectedCategory={setSelectedCategory} // Pass function to set selected category
+        />
+      )}
     </div>
   );
 }

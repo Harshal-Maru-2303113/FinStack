@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useIsCurrentPage } from '@/hooks/useIsCurrentPage';
 import { 
   FiHome, 
   FiDollarSign, 
@@ -131,25 +132,43 @@ export default function Navigation() {
             </motion.div>
 
             <nav className="mt-8">
-              {menuItems.map((item, index) => (
-                <motion.div
-                  key={index}
-                  variants={menuItemVariants}
-                  custom={index}
-                  initial="closed"
-                  animate="open"
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link 
-                    href={item.path}
-                    onClick={() => isMobile && setIsOpen(false)}
-                    className="flex items-center gap-4 px-4 py-3 hover:bg-gray-800 transition-all"
+              {menuItems.map((item, index) => {
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                const isCurrentPage = useIsCurrentPage(item.path);
+                return (
+                  <motion.div
+                    key={index}
+                    variants={menuItemVariants}
+                    custom={index}
+                    initial="closed"
+                    animate="open"
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <div className="text-blue-500">{item.icon}</div>
-                    <span className="text-gray-300">{item.title}</span>
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link 
+                      href={item.path}
+                      onClick={() => isMobile && setIsOpen(false)}
+                      className={`flex items-center gap-4 px-4 py-3 hover:bg-gray-800 transition-all relative overflow-hidden ${
+                        isCurrentPage ? 'text-blue-500' : 'text-gray-300'
+                      }`}
+                    >
+                      <div className={isCurrentPage ? 'text-blue-500' : 'text-gray-500'}>
+                        {item.icon}
+                      </div>
+                      <span>{item.title}</span>
+                      {isCurrentPage && (
+                        <motion.div
+                          layoutId="activeNavItem"
+                          className="absolute inset-0 bg-gray-800 z-[-1]"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </nav>
           </motion.div>
         )}
@@ -170,3 +189,4 @@ export default function Navigation() {
     </>
   );
 }
+

@@ -42,8 +42,7 @@ export async function AggregateTransactionData(data: processTransactionYear) {
       const monthData = data[Number(year)];
       let totalIncome = 0,
         totalExpense = 0,
-        totalBalance = 0,
-        monthCount = 0;
+        totalBalance = 0
 
       for (const month in monthData) {
         for (const day in monthData[month]) {
@@ -52,7 +51,6 @@ export async function AggregateTransactionData(data: processTransactionYear) {
           totalExpense += dayInfo.expense[0];
           totalBalance += dayInfo.balance[0];
         }
-        monthCount++;
       }
 
       aggregatedYears[Number(year)] = {
@@ -61,9 +59,9 @@ export async function AggregateTransactionData(data: processTransactionYear) {
             day: 0, // Placeholder
             month: "Aggregated",
             year: parseInt(year),
-            income: [totalIncome / monthCount || 0],
-            expense: [totalExpense / monthCount || 0],
-            balance: [totalBalance / monthCount || 0],
+            income: [totalIncome  || 0],
+            expense: [totalExpense || 0],
+            balance: [totalBalance || 0],
           },
         },
       };
@@ -84,15 +82,13 @@ export async function AggregateTransactionData(data: processTransactionYear) {
       const dayData = data[Number(year)][month];
       let totalIncome = 0,
         totalExpense = 0,
-        totalBalance = 0,
-        dayCount = 0;
+        totalBalance = 0
 
       for (const day in dayData) {
         const dayInfo = dayData[day];
         totalIncome += dayInfo.income[0];
         totalExpense += dayInfo.expense[0];
         totalBalance += dayInfo.balance[0];
-        dayCount++;
       }
 
       aggregatedMonths[month] = {
@@ -100,9 +96,9 @@ export async function AggregateTransactionData(data: processTransactionYear) {
           day: 0, // Placeholder
           month: "",
           year: Number(year),
-          income: [totalIncome / dayCount || 0],
-          expense: [totalExpense / dayCount || 0],
-          balance: [totalBalance / dayCount || 0],
+          income: [totalIncome  || 0],
+          expense: [totalExpense  || 0],
+          balance: [totalBalance || 0],
         },
       };
     });

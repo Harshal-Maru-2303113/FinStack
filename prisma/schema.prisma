@@ -43,6 +43,7 @@ model User {
   updated_at  DateTime  @updatedAt
 
   transactions Transaction[]
+  budgets      Budget[] // Relation to the Budget model
 }
 
 model Category {
@@ -50,9 +51,29 @@ model Category {
   category_name String      @db.VarChar(100)
 
   transactions  Transaction[]
+  budgets       Budget[]    // Relation to the Budget model
 }
+
 
 enum TransactionType {
   credit
   debit
 }
+
+model Budget {
+  budget_id     Int       @id @default(autoincrement())
+  user_id       Int
+  category_id   Int
+  budget_amount Decimal   @db.Decimal(10, 2)
+  amount_spent  Decimal   @default(0) @db.Decimal(10, 2)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  valid_until   DateTime  // The period until which the budget is valid
+
+  user          User      @relation(fields: [user_id], references: [id])
+  category      Category  @relation(fields: [category_id], references: [category_id])
+
+  @@unique([user_id, category_id]) // Ensures a user can only set one budget per category
+}
+
+
