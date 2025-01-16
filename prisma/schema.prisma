@@ -59,21 +59,24 @@ enum TransactionType {
   credit
   debit
 }
-
 model Budget {
   budget_id     Int       @id @default(autoincrement())
-  user_id       Int
+  email    String
   category_id   Int
   budget_amount Decimal   @db.Decimal(10, 2)
   amount_spent  Decimal   @default(0) @db.Decimal(10, 2)
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   valid_until   DateTime  // The period until which the budget is valid
+  emailSent50   Boolean   @default(false) // Indicates if email sent at 50% of budget
+  emailSent100  Boolean   @default(false) // Indicates if email sent at 100% of budget
 
-  user          User      @relation(fields: [user_id], references: [id])
+  user          User      @relation(fields: [email], references: [email])
   category      Category  @relation(fields: [category_id], references: [category_id])
 
-  @@unique([user_id, category_id]) // Ensures a user can only set one budget per category
+  @@unique([email, category_id]) // Ensures a user can only set one budget per category
 }
+
+
 
 

@@ -1,69 +1,79 @@
+'use client'
+
+import { BudgetFetchData } from "@/types/BudgetData";
+import { categories } from "@/utils/categories";
 import { motion } from "framer-motion";
-import { FiTrash2, FiEdit } from "react-icons/fi";
 
-interface BudgetCardProps {
-  category: { category_id: number, name: string, allocated: number, spent: number };
-  index: number;
-  onEdit: (categoryId: number) => void;
-  onRemove: (categoryId: number) => void;
-  onBudgetChange: (index: number, event: React.ChangeEvent<HTMLInputElement>) => void;
-}
 
-const BudgetCard: React.FC<BudgetCardProps> = ({ category, index, onEdit, onRemove, onBudgetChange }) => {
+const BudgetCard = (budget: BudgetFetchData) => {
+  const percentUsed = (budget.amount_spent / budget.budget_amount) * 100;
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="bg-gray-800 rounded-xl p-4 border border-gray-700"
+    <div
+      className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
     >
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-white font-semibold">{category.name}</h3>
-        <span className="text-gray-400 text-sm">
-          ${category.spent}/{category.allocated}
-        </span>
-      </div>
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div className="flex-1">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-xl font-semibold text-white mb-4"
+          >
+            {categories.find((cat) => cat.category_id === budget.category_id)
+              ?.name || "Unknown Category"}
+          </motion.h2>
 
-      <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{
-            width: `${(category.spent / category.allocated) * 100}%`,
-          }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600"
-        />
-      </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex justify-between items-center mb-4"
+          >
+            <span className="text-gray-400">Spent / Budget</span>
+            <span className="text-white font-semibold">
+              ${budget.amount_spent.toFixed(2)} / ${" "}
+              {budget.budget_amount.toFixed(2)}
+            </span>
+          </motion.div>
 
-      {/* Budget Input */}
-      <div className="mt-4">
-        <label className="text-gray-300">Set Budget</label>
-        <input
-          type="number"
-          value={category.allocated}
-          onChange={(e) => onBudgetChange(index, e)}
-          className="mt-2 w-full p-2 bg-gray-700 text-white rounded-lg"
-          placeholder="Enter budget"
-        />
-      </div>
+          {/* Progress Bar */}
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ delay: 0.4, duration: 0.7, ease: "easeOut" }}
+            className="relative h-3 bg-gray-700 rounded-full overflow-hidden"
+          >
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${percentUsed}%` }}
+              transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
+              className={`absolute top-0 left-0 h-full ${
+                percentUsed > 90
+                  ? "bg-red-500"
+                  : percentUsed > 70
+                  ? "bg-yellow-500"
+                  : "bg-blue-500"
+              }`}
+            />
+          </motion.div>
 
-      {/* Edit and Remove Buttons */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => onEdit(category.category_id)}
-          className="text-blue-500 hover:text-blue-700"
-        >
-          <FiEdit size={20} />
-        </button>
-        <button
-          onClick={() => onRemove(category.category_id)}
-          className="text-red-500 hover:text-red-700"
-        >
-          <FiTrash2 size={20} />
-        </button>
+          {/* Valid Until Date */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex justify-between items-center mt-4"
+          >
+            <span className="text-gray-400">Valid until</span>
+            <span className="text-white">
+              {budget.valid_until.toLocaleDateString()}
+            </span>
+          </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default BudgetCard;
+
+export { BudgetCard };
