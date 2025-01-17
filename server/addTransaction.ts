@@ -28,7 +28,7 @@ export default async function addTransactions({amount, transaction_type, descrip
         }
         const balanceValue = Number(currentBalance.value);
         const balance = transaction_type === 'credit' ? balanceValue + Number(amount) : balanceValue - Number(amount);
-        await prisma.transaction.create({
+        const res = await prisma.transaction.create({
             data: {
                 amount: amount,
                 transaction_type: transaction_type,
@@ -39,7 +39,7 @@ export default async function addTransactions({amount, transaction_type, descrip
                 balance: balance, // or calculate the balance as needed
             },
         });
-        return { success: true, message: 'Transaction added successfully' };
+        return { success: true, message: 'Transaction added successfully',date_time:res.date_time };
     } catch (error) {
         console.error('Error adding transaction:', error);
         return { success: false, message: 'Failed to add transaction' };

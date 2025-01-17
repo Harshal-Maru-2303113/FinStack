@@ -80,6 +80,8 @@ export default function BudgetPage() {
     }
   };
 
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -136,7 +138,7 @@ export default function BudgetPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {budgets.length > 0
                   ? budgets.map((budget, index) => (
-                      <BudgetCard key={index} {...budget} />
+                      <BudgetCard key={index} {...budget}/>
                     ))
                   : ""}
               </div>

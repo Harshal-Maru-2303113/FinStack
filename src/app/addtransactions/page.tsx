@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { categories } from "@/utils/categories";
 import addTransaction from "@/../server/addTransaction";
 import { getSession } from "next-auth/react";
+import addBudgetAmount from "../../../server/addBudgetAmount";
 
 export default function TransactionPage() {
   const router = useRouter();
@@ -39,6 +40,9 @@ export default function TransactionPage() {
       const response = await addTransaction(data,session.user.email);
 
       if (response.success) {
+        const category:string = String(categories.find((cat) => cat.category_id === Number(categoryId))?.name);
+        const budget = await addBudgetAmount(Number(data.amount),data.transaction_type,Number(data.category_id),response.date_time || new Date(),session.user.email,category);
+        console.dir(budget);
         alert("Transaction added successfully!");
         router.push("/dashboard");
       } else {
@@ -60,7 +64,6 @@ export default function TransactionPage() {
       return;
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     sentTransactionData();

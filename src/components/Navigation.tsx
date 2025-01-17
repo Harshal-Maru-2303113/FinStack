@@ -3,17 +3,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useIsCurrentPage } from '@/hooks/useIsCurrentPage';
-import { 
-  FiHome, 
-  FiDollarSign, 
-  FiPieChart, 
-  FiTrendingUp,
+import { useIsCurrentPage } from "@/hooks/useIsCurrentPage";
+import {
+  FiHome,
+  FiDollarSign,
+  FiPieChart,
   FiSettings,
   FiUser,
   FiMenu,
   FiX,
-  FiBarChart2
+  FiBarChart2,
 } from "react-icons/fi";
 
 export default function Navigation() {
@@ -27,16 +26,19 @@ export default function Navigation() {
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   const menuItems = [
     { title: "Dashboard", icon: <FiHome size={20} />, path: "/dashboard" },
-    { title: "Transactions", icon: <FiDollarSign size={20} />, path: "/transactions" },
+    {
+      title: "Transactions",
+      icon: <FiDollarSign size={20} />,
+      path: "/transactions",
+    },
     { title: "Budget", icon: <FiPieChart size={20} />, path: "/budget" },
-    { title: "Investments", icon: <FiTrendingUp size={20} />, path: "/investments" },
-    { title: "Analytics", icon: <FiBarChart2 size={20} />, path: "/analytics" }, 
+    { title: "Analytics", icon: <FiBarChart2 size={20} />, path: "/analytics" },
     { title: "Profile", icon: <FiUser size={20} />, path: "/profile" },
     { title: "Settings", icon: <FiSettings size={20} />, path: "/settings" },
   ];
@@ -48,8 +50,8 @@ export default function Navigation() {
         type: "spring",
         stiffness: 200,
         damping: 24,
-        mass: 0.8
-      }
+        mass: 0.8,
+      },
     },
     closed: {
       x: "-100%",
@@ -57,9 +59,9 @@ export default function Navigation() {
         type: "spring",
         stiffness: 300,
         damping: 30,
-        mass: 0.8
-      }
-    }
+        mass: 0.8,
+      },
+    },
   };
 
   const menuItemVariants = {
@@ -70,28 +72,28 @@ export default function Navigation() {
         type: "spring",
         stiffness: 250,
         damping: 24,
-        mass: 0.8
-      }
+        mass: 0.8,
+      },
     },
     closed: {
       x: -20,
-      opacity: 0
-    }
+      opacity: 0,
+    },
   };
 
   const overlayVariants = {
     open: {
       opacity: 1,
       transition: {
-        duration: 0.3
-      }
+        duration: 0.3,
+      },
     },
     closed: {
       opacity: 0,
       transition: {
-        duration: 0.2
-      }
-    }
+        duration: 0.2,
+      },
+    },
   };
 
   return (
@@ -112,7 +114,7 @@ export default function Navigation() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial="closed"
             animate="open"
             exit="closed"
@@ -120,7 +122,7 @@ export default function Navigation() {
             className="fixed left-0 top-0 h-screen bg-gray-900 text-white
               w-[280px] shadow-2xl border-r border-gray-800 z-40"
           >
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -144,14 +146,18 @@ export default function Navigation() {
                     animate="open"
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Link 
+                    <Link
                       href={item.path}
                       onClick={() => isMobile && setIsOpen(false)}
                       className={`flex items-center gap-4 px-4 py-3 hover:bg-gray-800 transition-all relative overflow-hidden ${
-                        isCurrentPage ? 'text-blue-500' : 'text-gray-300'
+                        isCurrentPage ? "text-blue-500" : "text-gray-300"
                       }`}
                     >
-                      <div className={isCurrentPage ? 'text-blue-500' : 'text-gray-500'}>
+                      <div
+                        className={
+                          isCurrentPage ? "text-blue-500" : "text-gray-500"
+                        }
+                      >
                         {item.icon}
                       </div>
                       <span>{item.title}</span>
@@ -162,7 +168,11 @@ export default function Navigation() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 30,
+                          }}
                         />
                       )}
                     </Link>
@@ -189,4 +199,3 @@ export default function Navigation() {
     </>
   );
 }
-
