@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinStack - Personal Finance Management
 
-## Getting Started
 
-First, run the development server:
+**FinStack** is a powerful and user-friendly personal finance management web app that helps you track your income, expenses, and budgeting effortlessly. Whether you're tracking monthly expenses, analyzing your spending habits, or planning your future finances, FinStack provides the tools you need to manage your money effectively.
+
+[Visit FinStack](https://fin-stack.vercel.app/)
+
+---
+
+## 🛠 Features
+
+- **Track Transactions**: Easily log and track your income and expenses with detailed transaction records.
+- **Budgeting**: Set and monitor budgets across multiple categories to stay on top of your finances.
+- **Analytics**: Visualize your income, expenses, and overall financial health through intuitive graphs and summaries.
+- **Secure Authentication**: Safe, secure login and session management with cookie-based authentication.
+- **Category Management**: Customizable categories for better organization of your financial transactions.
+
+---
+
+## 🚀 Demo
+
+Check out FinStack live on Vercel:
+
+[**FinStack Demo**](https://fin-stack.vercel.app/)
+
+---
+
+## ⚙️ Technologies Used
+
+- **Frontend**:
+  - **React.js**: A powerful JavaScript library for building user interfaces.
+  - **Next.js**: A React framework for server-side rendering, API routes, and more.
+  - **Framer Motion**: Provides smooth animations and transitions for a better user experience.
+  - **Tailwind CSS**: A utility-first CSS framework for fast and responsive designs.
+
+- **Backend**:
+  - **Prisma**: A modern ORM for working with databases, providing type-safe queries and migrations.
+  - **Next.js Backend**: The runtime used for server-side logic and handling API requests.
+  - **Next.js Middleware**: For session handling and authentication routing.
+
+- **Database**:
+  - **PostgreSQL**: A powerful relational database management system to store user data and transactions.
+
+---
+
+## 🌟 Key Features Breakdown
+
+### 1. **Transaction Tracking**:
+Users can log every transaction they make, categorizing them as either **credit** (income) or **debit** (expense). Transactions are stored with detailed information like date, description, and balance.
+
+### 2. **Income & Expense Categorization**:
+Categories like **Food**, **Transportation**, **Shopping**, **Investments**, and more, help users organize their spending habits and analyze them over time.
+
+### 3. **Budgeting**:
+Set budgets for different categories and monitor how much of your allocated budget you've spent. The app provides reminders when you’re nearing your set limits.
+
+### 4. **Analytics Dashboard**:
+Visual representation of income, expenses, and budget usage. Track your financial trends over time and make informed decisions.
+
+### 5. **Secure User Authentication**:
+With **NextAuth.js** and Prisma, your account is safely protected. We ensure a seamless login and secure cookie-based session management.
+
+---
+
+## 📱 Screenshots
+
+**Dashboard**:  
+![Dashboard Screenshot](https://ibb.co/Rzp0Z4M)
+
+**Transaction List**:  
+![Transaction Screenshot](https://ibb.co/db4q1ph)
+
+**Analytics Page**:  
+![Analytics Screenshot](https://ibb.co/r6J2Cgx)
+
+**Budgeting**:
+![Budgeting Screenshot](https://ibb.co/ydx4qQ4)
+
+---
+
+## 🛠 Installation
+
+### Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Harshal-Maru-2303113/FinStack  
+cd finstack
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## ⚙️ Usage
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Authentication:
+Log in with your credentials or sign up for a new account.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Add Transactions:
+Track your income and expenses by adding transactions.
 
-## Deploy on Vercel
+### 3. Set Budgets: 
+Create budgets for different categories and track how much you’ve spent.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. View Analytics:
+Visualize your spending trends through graphs and summaries.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+----
+
+
+Contact me on LinkedIn: [Harshal Maru](www.linkedin.com/in/harshal-maru-rakeshbhai)

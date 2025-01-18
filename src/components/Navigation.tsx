@@ -3,33 +3,37 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useIsCurrentPage } from "@/hooks/useIsCurrentPage";
+import { useIsCurrentPage } from "@/hooks/useIsCurrentPage"; // Hook to check the current page
 import {
   FiHome,
   FiDollarSign,
   FiPieChart,
-  FiSettings,
   FiUser,
   FiMenu,
   FiX,
   FiBarChart2,
-} from "react-icons/fi";
+} from "react-icons/fi"; // Icons used for the navigation items
 
 export default function Navigation() {
+  // State for controlling whether the sidebar is open or closed
   const [isOpen, setIsOpen] = useState(true);
+
+  // State to detect if the user is on a mobile device (screen width < 768px)
   const [isMobile, setIsMobile] = useState(false);
 
+  // Effect hook to handle screen resizing and update the state for mobile screens
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
-      setIsOpen(window.innerWidth >= 768);
+      setIsOpen(window.innerWidth >= 768); // Sidebar is open for screens wider than 768px
     };
 
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
+    checkScreenSize(); // Check initial screen size
+    window.addEventListener("resize", checkScreenSize); // Update on screen resize
+    return () => window.removeEventListener("resize", checkScreenSize); // Clean up on unmount
   }, []);
 
+  // Array of menu items with title, icon, and path for navigation
   const menuItems = [
     { title: "Dashboard", icon: <FiHome size={20} />, path: "/dashboard" },
     {
@@ -40,9 +44,9 @@ export default function Navigation() {
     { title: "Budget", icon: <FiPieChart size={20} />, path: "/budget" },
     { title: "Analytics", icon: <FiBarChart2 size={20} />, path: "/analytics" },
     { title: "Profile", icon: <FiUser size={20} />, path: "/profile" },
-    { title: "Settings", icon: <FiSettings size={20} />, path: "/settings" },
   ];
 
+  // Animation variants for menu transition (open/closed)
   const menuVariants = {
     open: {
       x: 0,
@@ -54,7 +58,7 @@ export default function Navigation() {
       },
     },
     closed: {
-      x: "-100%",
+      x: "-100%", // Menu slides off screen when closed
       transition: {
         type: "spring",
         stiffness: 300,
@@ -64,6 +68,7 @@ export default function Navigation() {
     },
   };
 
+  // Animation variants for each menu item transition
   const menuItemVariants = {
     open: {
       x: 0,
@@ -77,10 +82,11 @@ export default function Navigation() {
     },
     closed: {
       x: -20,
-      opacity: 0,
+      opacity: 0, // Menu items fade and slide when closed
     },
   };
 
+  // Overlay animation when the mobile menu is open
   const overlayVariants = {
     open: {
       opacity: 1,
@@ -98,14 +104,15 @@ export default function Navigation() {
 
   return (
     <>
+      {/* Button to toggle sidebar on mobile */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(!isOpen)} // Toggle sidebar visibility
         className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-lg bg-gray-900 text-white"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.05 }} // Add hover effect
+        whileTap={{ scale: 0.95 }} // Add tap effect
       >
         <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
+          animate={{ rotate: isOpen ? 180 : 0 }} // Rotate button when sidebar is open/closed
           transition={{ duration: 0.3 }}
         >
           {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -118,10 +125,11 @@ export default function Navigation() {
             initial="closed"
             animate="open"
             exit="closed"
-            variants={menuVariants}
+            variants={menuVariants} // Apply open/close animation
             className="fixed left-0 top-0 h-screen bg-gray-900 text-white
               w-[280px] shadow-2xl border-r border-gray-800 z-40"
           >
+            {/* Sidebar header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -134,13 +142,15 @@ export default function Navigation() {
             </motion.div>
 
             <nav className="mt-8">
+              {/* Iterate over the menu items */}
               {menuItems.map((item, index) => {
+                // Check if the current item path is the active page
                 // eslint-disable-next-line react-hooks/rules-of-hooks
                 const isCurrentPage = useIsCurrentPage(item.path);
                 return (
                   <motion.div
                     key={index}
-                    variants={menuItemVariants}
+                    variants={menuItemVariants} // Apply menu item animation
                     custom={index}
                     initial="closed"
                     animate="open"
@@ -148,11 +158,12 @@ export default function Navigation() {
                   >
                     <Link
                       href={item.path}
-                      onClick={() => isMobile && setIsOpen(false)}
+                      onClick={() => isMobile && setIsOpen(false)} // Close the menu on mobile when a link is clicked
                       className={`flex items-center gap-4 px-4 py-3 hover:bg-gray-800 transition-all relative overflow-hidden ${
                         isCurrentPage ? "text-blue-500" : "text-gray-300"
                       }`}
                     >
+                      {/* Icon and Title for the menu item */}
                       <div
                         className={
                           isCurrentPage ? "text-blue-500" : "text-gray-500"
@@ -161,6 +172,7 @@ export default function Navigation() {
                         {item.icon}
                       </div>
                       <span>{item.title}</span>
+                      {/* Highlight the active menu item */}
                       {isCurrentPage && (
                         <motion.div
                           layoutId="activeNavItem"
@@ -184,6 +196,7 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
+      {/* Overlay to dim the background on mobile when the menu is open */}
       <AnimatePresence>
         {isMobile && isOpen && (
           <motion.div
@@ -191,7 +204,7 @@ export default function Navigation() {
             initial="closed"
             animate="open"
             exit="closed"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsOpen(false)} // Close the menu when the overlay is clicked
             className="fixed inset-0 bg-black/50 z-30 md:hidden"
           />
         )}

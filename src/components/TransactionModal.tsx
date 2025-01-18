@@ -1,29 +1,30 @@
 import { Transaction } from "@/types/Transaction";
 
 interface TransactionModalProps {
-  transaction: Transaction | null;
-  onClose: () => void;
+  transaction: Transaction | null; // Transaction data, can be null when no transaction is selected
+  onClose: () => void; // Function to close the modal
 }
 
 export default function TransactionModal({
   transaction,
   onClose,
 }: TransactionModalProps) {
-  if (!transaction) return null;
+  if (!transaction) return null; // If no transaction data is passed, return null (don't render anything)
 
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-      onClick={onClose} // Close when clicking on the overlay
+      onClick={onClose} // Close the modal when clicking on the overlay
     >
       <div
         className="bg-gray-800 p-6 rounded-xl border border-gray-700 max-w-md w-full mx-4"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal content
       >
         <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent p-3 text-center">
           Transaction Details
         </h3>
         <div className="space-y-4 text-white text-sm md:text-xl">
+          {/* Transaction ID */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">
               Transaction ID:
@@ -32,6 +33,8 @@ export default function TransactionModal({
               {transaction.transaction_id}
             </span>
           </p>
+          
+          {/* Transaction Date */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Date:</span>
             <span className="block text-xl text-gray-200">
@@ -42,6 +45,8 @@ export default function TransactionModal({
               })}
             </span>
           </p>
+          
+          {/* Transaction Time */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Time:</span>
             <span className="block text-xl text-gray-200">
@@ -52,6 +57,8 @@ export default function TransactionModal({
               })}
             </span>
           </p>
+
+          {/* Transaction Type (Credit/Debit) */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Type:</span>
             <span
@@ -66,6 +73,8 @@ export default function TransactionModal({
                 .toUpperCase() + transaction.transaction_type.slice(1)}
             </span>
           </p>
+
+          {/* Transaction Amount */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Amount:</span>
             <span
@@ -78,6 +87,8 @@ export default function TransactionModal({
               ${Number(transaction.amount).toFixed(2)}
             </span>
           </p>
+
+          {/* Transaction Description */}
           <p>
             <span className="font-semibold text-xl text-blue-400">
               Description:
@@ -86,6 +97,8 @@ export default function TransactionModal({
               {transaction.description}
             </span>
           </p>
+
+          {/* Transaction Category */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">
               Category:
@@ -94,6 +107,8 @@ export default function TransactionModal({
               {transaction.category_name}
             </span>
           </p>
+
+          {/* Transaction Balance */}
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Balance:</span>
             <span className="block text-xl text-gray-200">
@@ -101,9 +116,11 @@ export default function TransactionModal({
             </span>
           </p>
         </div>
+
+        {/* Close Button */}
         <button
           className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition"
-          onClick={onClose}
+          onClick={onClose} // Close the modal when clicked
         >
           Close
         </button>

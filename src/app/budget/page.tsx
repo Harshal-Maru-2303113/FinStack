@@ -1,4 +1,3 @@
-// Updated Budget Page Component with Completed Budgets Section
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,6 +16,7 @@ import getCompletedBudget, {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Interface for Budget data
 export interface Budget {
   category_id: number;
   budget_amount: number;
@@ -26,19 +26,19 @@ export interface Budget {
 
 // Main Budget Page Component
 export default function BudgetPage() {
+  // State to store active budgets and completed budgets
   const [budgets, setBudgets] = useState<BudgetFetchData[]>([]);
-  const [completedBudgets, setCompletedBudgets] = useState<CompletedBudget[]>(
-    []
-  );
+  const [completedBudgets, setCompletedBudgets] = useState<CompletedBudget[]>([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [email, setEmail] = useState("");
 
   // Add Budget Form State
-  const [category, setCategory] = useState("");
-  const [category_id, setCategory_id] = useState(0);
-  const [amount, setAmount] = useState("");
-  const [validUntil, setValidUntil] = useState("");
+  const [category, setCategory] = useState(""); // Category selected for new budget
+  const [category_id, setCategory_id] = useState(0); // ID of selected category
+  const [amount, setAmount] = useState(""); // Amount for the new budget
+  const [validUntil, setValidUntil] = useState(""); // Valid until date for new budget
 
+  // Fetching budget and completed budget data on initial load
   useEffect(() => {
     const fetchBudget = async () => {
       const session = await getSession();
@@ -52,6 +52,7 @@ export default function BudgetPage() {
         if (response.success) { 
           toast.success("Budget data fetched successfully");
           const allBudgets = response.data as BudgetFetchData[];
+          // Filter active budgets (where amount spent is less than budgeted amount)
           setBudgets(
             allBudgets.filter(
               (budget) => budget.amount_spent < budget.budget_amount
@@ -60,13 +61,13 @@ export default function BudgetPage() {
         } else {
           toast.error("Failed to fetch budget data");
         }
+        // Fetch completed budgets
         try {
           const completedResponse = await getCompletedBudget(
             session.user.email
           );
           if (completedResponse.success) {
-            const completedBudgets =
-              completedResponse.data as CompletedBudget[];
+            const completedBudgets = completedResponse.data as CompletedBudget[];
             setCompletedBudgets(completedBudgets);
           } else {
             toast.error("Failed to fetch completed budget data");
@@ -81,6 +82,7 @@ export default function BudgetPage() {
     fetchBudget();
   }, []);
 
+  // Function to handle adding a new budget
   const addBudget = async (newBudget: Budget) => {
     try {
       if (!newBudget || !email) {
@@ -110,19 +112,22 @@ export default function BudgetPage() {
     }
   };
 
+  // Form submit handler for adding a new budget
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); // Set time to midnight to ensure proper comparison
     const selectedDate = new Date(validUntil);
-    selectedDate.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0); // Set time to midnight
 
+    // Validation: Ensure amount is not negative
     if (parseFloat(amount) < 0) {
       toast.error("Amount cannot be negative");
       return;
     }
 
+    // Validation: Ensure valid date is not in the past
     if (selectedDate < today) {
       toast.error("Valid date cannot be in the past");
       return;
@@ -155,13 +160,14 @@ export default function BudgetPage() {
                   Budget Overview
                 </h1>
                 <button
-                  onClick={() => setIsPopupOpen(true)}
+                  onClick={() => setIsPopupOpen(true)} // Open popup to add a new budget
                   className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg px-4 py-2 font-semibold hover:opacity-90 transition flex items-center justify-center"
                 >
                   <FiPlus className="mr-2" /> Add Budget
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {/* Render active budgets */}
                 {budgets.length > 0
                   ? budgets.map((budget, index) => (
                       <BudgetCard.BudgetCard
@@ -180,6 +186,7 @@ export default function BudgetPage() {
                 Completed Budgets
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {/* Render completed budgets */}
                 {completedBudgets.length > 0
                   ? completedBudgets.map((budget, index) => (
                       <BudgetCard.BudgetCard
@@ -190,7 +197,7 @@ export default function BudgetPage() {
                           created_at: new Date(),
                           updated_at: new Date(),
                           emailSent50: false,
-                          emailSent100: false
+                          emailSent100: false,
                         }}
                         isCompleted={true}
                       />
@@ -210,7 +217,7 @@ export default function BudgetPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-            onClick={() => setIsPopupOpen(false)} // Close on overlay click
+            onClick={() => setIsPopupOpen(false)} // Close popup when clicking outside
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -279,7 +286,7 @@ export default function BudgetPage() {
                     id="validUntil"
                     value={validUntil}
                     onChange={(e) => setValidUntil(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
+                    min={new Date().toISOString().split("T")[0]} // Ensure valid date is today or in the future
                     className="w-full p-2 bg-gray-700 text-white rounded-lg"
                     required
                   />
@@ -287,7 +294,7 @@ export default function BudgetPage() {
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsPopupOpen(false)}
+                    onClick={() => setIsPopupOpen(false)} // Close the popup on cancel
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition"
                   >
                     Cancel

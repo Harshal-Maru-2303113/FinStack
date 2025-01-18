@@ -1,33 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react"; // React hooks for state and effect
+import { motion } from "framer-motion"; // For animations
 import {
   FiDollarSign,
   FiTrendingUp,
   FiCreditCard,
   FiArrowUp,
   FiArrowDown,
-} from "react-icons/fi";
-import Navigation from "@/components/Navigation";
-import Link from "next/link";
-import { Transaction } from "@/types/Transaction";
-import getUserTransactions from "@/../server/getUserTransactions";
-import TransactionLoading from "@/components/TransactionLoading";
-import { getSession } from "next-auth/react";
-import { filter } from "@/../server/getUserTransactions";
-import truncateDescription from "@/utils/truncateDescription";
-import TransactionModal from "@/components/TransactionModal";
-import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
-import SpendingChartByCategories from "@/components/graphs/SpendingChartByCategories";
-import BalanceChart from "@/components/graphs/BalanceChart";
-import BarGraphSkeleton from "@/components/GraphLoading";
-import ProcessTransactionData from "@/utils/processTransactionData";
-import { AggregateTransactionData } from "@/utils/AggregateTransactionData";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+} from "react-icons/fi"; // Importing icons for UI
+import Navigation from "@/components/Navigation"; // Navigation component
+import Link from "next/link"; // Link component for routing
+import { Transaction } from "@/types/Transaction"; // Type for transactions
+import getUserTransactions from "@/../server/getUserTransactions"; // Function to fetch user transactions
+import TransactionLoading from "@/components/TransactionLoading"; // Skeleton loading component for transactions
+import { getSession } from "next-auth/react"; // For getting user session
+import { filter } from "@/../server/getUserTransactions"; // Transaction filter type
+import truncateDescription from "@/utils/truncateDescription"; // Utility to truncate transaction descriptions
+import TransactionModal from "@/components/TransactionModal"; // Modal to display detailed transaction
+import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance"; // Utility to calculate monthly finance stats
+import SpendingChartByCategories from "@/components/graphs/SpendingChartByCategories"; // Spending chart component
+import BarGraphSkeleton from "@/components/GraphLoading"; // Skeleton loading component for graphs
+import ProcessTransactionData from "@/utils/processTransactionData"; // Utility to process transaction data
+import { AggregateTransactionData } from "@/utils/AggregateTransactionData"; // Utility to aggregate transaction data
+import { ToastContainer, toast } from "react-toastify"; // For showing toast notifications
+import "react-toastify/dist/ReactToastify.css"; // Import toast CSS
 
-// Constants
+// Constants for quick stats display (Total Balance, Monthly Income, Total Expenses)
 const QUICK_STATS = (amount: number, income: number, expense: number) => [
   {
     title: "Total Balance",
@@ -47,6 +46,7 @@ const QUICK_STATS = (amount: number, income: number, expense: number) => [
 ];
 
 export default function Dashboard() {
+  // State hooks to store transaction data, balance, income, expenses, and loading states
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState(0);
   const [income, setIncome] = useState(0);
@@ -55,17 +55,17 @@ export default function Dashboard() {
   const [popupContent, setPopupContent] = useState<Transaction | null>(null);
   const [isFinanceValuesLoading, setIsFinanceValuesLoading] = useState(true);
 
+  // State hooks for chart data
   const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
   const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
-  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
-    []
-  );
-  const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
+
+
   const [isGraphLoading, setIsGraphLoading] = useState(true);
-  const [GraphDate, setGraphDate] = useState<string>("Time Period");
+
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      // Get the session to ensure the user is logged in
       const session = await getSession();
       if (!session) {
         toast.error("Session not found. Please log in.");
@@ -74,6 +74,8 @@ export default function Dashboard() {
 
       try {
         toast.info("Fetching transactions...");
+
+        // Fetch the transactions for the logged-in user
         const transactions = await getUserTransactions(
           session.user.email,
           0,
@@ -83,14 +85,19 @@ export default function Dashboard() {
 
         if (transactions.success) {
           toast.success("Transactions fetched successfully!");
+          // Reverse the transaction data to show the latest transaction first
           setTransactionArray(transactions.data.reverse());
+          // Set the balance from the latest transaction
           setBalance(
             Number(transactions.data[transactions.data.length - 1].balance)
           );
+
+          // Calculate monthly income and expenses
           const FinanceData = await calculateMonthlyFinance(session.user.email);
           setIncome(FinanceData.totalIncome);
           setExpense(FinanceData.totalExpense);
 
+          // Object to track spending by category
           const spendingSources: { [key: string]: number } = {};
           transactions.data.forEach((transaction: Transaction) => {
             const category = transaction.category_name || "Others";
@@ -102,6 +109,7 @@ export default function Dashboard() {
             }
           });
 
+          // Process transaction data for graph aggregation
           const processTransactions = ProcessTransactionData(transactions.data);
           const AggregatedData = await AggregateTransactionData(
             processTransactions
@@ -110,7 +118,7 @@ export default function Dashboard() {
           const balances: number[] = [];
           const dateLabel: string[] = [];
 
-          // Process graph data
+          // Process the aggregated data to format for the balance chart
           if (Object.keys(AggregatedData).length === 1) {
             const year = Number(Object.keys(AggregatedData)[0]);
             if (Object.keys(AggregatedData[year]).length === 1) {
@@ -119,7 +127,6 @@ export default function Dashboard() {
               Object.entries(days).forEach(([day, Data]) => {
                 dateLabel.push(String(day));
                 balances.push(Number(Data.balance[0]));
-                setGraphDate(month + " " + year);
               });
             } else {
               const months = Object.keys(AggregatedData[year]);
@@ -128,7 +135,6 @@ export default function Dashboard() {
                 Object.entries(days).forEach(([day, Data]) => {
                   dateLabel.push(String(day) + " " + month);
                   balances.push(Number(Data.balance[0]));
-                  setGraphDate(String(year));
                 });
               });
             }
@@ -148,13 +154,10 @@ export default function Dashboard() {
             });
           }
           toast.success("Graph data fetched successfully!");
-          setBalanceOverTimeLabels(dateLabel);
-          setBalanceOverTimeData(balances);
 
-          setIsGraphLoading(false);
+          setIsGraphLoading(false); // Stop loading graph
           setSpendingChartLabels(Object.keys(spendingSources));
           setSpendingChartData(Object.values(spendingSources));
-          
         } else {
           toast.error("Failed to fetch transactions.");
         }
@@ -162,29 +165,30 @@ export default function Dashboard() {
         console.error("Error fetching transactions:", error);
         toast.error("An error occurred while fetching transactions.");
       } finally {
-        setIsFinanceValuesLoading(false);
-        setIsTransactionLoading(false);
+        setIsFinanceValuesLoading(false); // Stop loading finance values
+        setIsTransactionLoading(false); // Stop loading transactions
       }
     };
 
-    fetchTransactions();
+    fetchTransactions(); // Fetch data when the component mounts
   }, []);
 
+  // Calculate total spending from the chart data
   const Total_Spending = spendingChartData.reduce((acc, curr) => acc + curr, 0);
 
   return (
     <div className="flex">
-      <Navigation />
+      <Navigation /> {/* Navigation component */}
       <div className="flex-1 md:ml-64 p-4">
-        <ToastContainer />
+        <ToastContainer /> {/* Toast notifications container */}
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
-        <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-[1400px] mx-auto"
           >
             <div className="bg-gray-900 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
-              {/* Header */}
+              {/* Header Section */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                   Financial Overview
@@ -196,7 +200,7 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              {/* Quick Stats */}
+              {/* Quick Stats Section */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {QUICK_STATS(balance, income, expense).map((stat, index) => (
                   <motion.div
@@ -261,37 +265,6 @@ export default function Dashboard() {
                   </div>
 
                   {/* Balance Over Time Section */}
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl md:text-xl font-semibold text-white mb-4">
-                      Balance Over Time
-                    </h2>
-
-                    {/* Current Balance Tab */}
-                    <div className="bg-gray-800 rounded-lg p-3 md:p-4 mb-4 text-center shadow-sm shadow-white">
-                      <span className="text-gray-400 text-sm md:text-base">
-                        Current Balance:
-                      </span>
-                      <span className="block text-xl md:text-2xl font-bold text-white">
-                        
-                        {isNaN(Number(transactionArray[0]?.balance))
-                          ? "0.00"
-                          : Number(transactionArray[0]?.balance).toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Chart Section */}
-                    {isGraphLoading ? (
-                      <BarGraphSkeleton />
-                    ) : (
-                      <div className="relative bg-gray-800 rounded-lg shadow-sm shadow-white p-4 md:p-6 lg:p-8 flex items-center justify-center">
-                        <BalanceChart
-                          labels={balanceOverTimeLabels}
-                          data={balanceOverTimeData}
-                          timePeriod={GraphDate}
-                        />
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Recent Transactions */}

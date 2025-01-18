@@ -2,62 +2,74 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import resetPassword from "../../../server/resetPassword";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi"; // Importing icons for input fields
+import { signIn } from "next-auth/react"; // For handling login using credentials
+import { useRouter } from "next/navigation"; // To navigate after login
+import resetPassword from "../../../server/resetPassword"; // Function for resetting the password
+import { ToastContainer, toast } from "react-toastify"; // For toast notifications
+import "react-toastify/dist/ReactToastify.css"; // Importing CSS for toast notifications
 
+// Main LoginPage component
 export default function LoginPage() {
+  // State management for form inputs
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
   });
+
+  // State management for toggling password visibility
   const [showPassword, setShowPassword] = useState(false);
+
+  // State management for showing the password reset modal
   const [showModal, setShowModal] = useState(false);
+
+  // Using Next.js router to navigate between pages
   const router = useRouter();
 
+  // Handles changes in form fields, removes any spaces from the input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const cleanedValue = value.replace(/\s/g, "");
+    const cleanedValue = value.replace(/\s/g, ""); // Removes spaces from input
     setFormData((prev) => ({
       ...prev,
-      [name]: cleanedValue,
+      [name]: cleanedValue, // Update the respective field value
     }));
   };
 
+  // Toggles the visibility of the password field (text or password)
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword(!showPassword); // Switches the state
   };
 
+  // Handles login submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents the default form submission
     try {
-      toast.info("Sending credentials to server...");
-      const response = await signIn("credentials", {
+      toast.info("Sending credentials to server..."); // Inform user that request is being processed
+      const response = await signIn("credentials", { // Makes API request for login
         redirect: false,
         email: formData.email,
         password: formData.password,
       });
 
       if (response?.error) {
-        toast.error(response.error);
+        toast.error(response.error); // Shows error message if login fails
       } else {
-        toast.success("Login successful!");
-        router.push("/dashboard");
+        toast.success("Login successful!"); // Success message
+        router.push("/dashboard"); // Redirect to dashboard on success
       }
     } catch (error) {
       console.error("An error occurred", error);
-      toast.error("An error occurred during login. Please try again.");
+      toast.error("An error occurred during login. Please try again."); // Error handling
     }
   };
 
+  // Handles the password reset form submission
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match.");
+      toast.error("Passwords do not match."); // Shows error if passwords do not match
       return;
     }
     try {
@@ -65,25 +77,25 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
       };
-      toast.info("Resetting password...");
-      const response = await resetPassword(data);
+      toast.info("Resetting password..."); // Inform user about the reset process
+      const response = await resetPassword(data); // Calls resetPassword function
 
       if (response.success) {
-        toast.success("Password reset successfully. Please verify your email.");
-        router.push(`/verification?email=${encodeURIComponent(data.email)}`);
+        toast.success("Password reset successfully. Please verify your email."); // Success toast
+        router.push(`/verification?email=${encodeURIComponent(data.email)}`); // Redirect to verification page
       } else {
-        toast.error("Failed to reset password.");
+        toast.error("Failed to reset password."); // Error handling
       }
     } catch (error) {
       console.error("An error occurred", error);
-      toast.error("An error occurred while resetting the password.");
+      toast.error("An error occurred while resetting the password."); // Error handling
     }
-    setShowModal(false);
+    setShowModal(false); // Close the reset password modal
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <ToastContainer />
+      <ToastContainer /> {/* Toast notifications container */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -150,7 +162,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => {
-                setShowModal(true);
+                setShowModal(true); // Shows reset password modal
               }}
               className="text-blue-500 hover:underline"
             >
@@ -227,7 +239,7 @@ export default function LoginPage() {
             </form>
             <button
               type="button"
-              onClick={() => setShowModal(false)}
+              onClick={() => setShowModal(false)} // Closes the modal
               className="mt-4 text-center text-gray-400 hover:underline block mx-auto"
             >
               Close

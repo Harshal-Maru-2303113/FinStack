@@ -2,36 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Root variables for color customization */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #ffffff; /* Default background color (light theme) */
+  --foreground: #171717; /* Default foreground color (light theme) */
 }
 
+/* Media query for dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a0a0a; /* Background color in dark mode */
+    --foreground: #ededed; /* Foreground color in dark mode */
   }
 }
 
+/* Basic body styling */
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--foreground); /* Set text color based on the current theme */
+  background: var(--background); /* Set background color based on the current theme */
+  font-family: Arial, Helvetica, sans-serif; /* Set default font */
 }
 
+/* Styling for the spinner animation */
 .spinner {
-  width: 144px;
-  height: 144px;
-  border-radius: 50%;
-  background: conic-gradient(#09f, purple, #09f);
-  mask: radial-gradient(farthest-side, transparent calc(100% - 16px), black);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 16px), black);
-  animation: spin 1s linear infinite;
+  width: 144px; /* Set the width of the spinner */
+  height: 144px; /* Set the height of the spinner */
+  border-radius: 50%; /* Make the spinner circular */
+  background: conic-gradient(#09f, purple, #09f); /* Create a conic gradient for the spinner */
+  mask: radial-gradient(farthest-side, transparent calc(100% - 16px), black); /* Create a mask to make the spinner hollow in the center */
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 16px), black); /* WebKit mask for older browsers */
+  animation: spin 1s linear infinite; /* Apply spin animation */
 }
 
+/* Keyframe animation for the spinner */
 @keyframes spin {
   to {
-    transform: rotate(360deg);
+    transform: rotate(360deg); /* Make the spinner rotate 360 degrees infinitely */
   }
 }

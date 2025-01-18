@@ -14,36 +14,35 @@ import uploadToImgBB from "../../../server/uploadToImgBB";
 import { ToastContainer, toast } from "react-toastify"; // Import ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import CSS for Toastify
 
-
-
-
 export default function ProfilePage() {
-  const [isFetching, setIsFetching] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
-  const [ageError, setAgeError] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // State variables for managing component data and user interactions
+  const [isFetching, setIsFetching] = useState(true); // Track if the profile data is being fetched
+  const [isEditing, setIsEditing] = useState(false); // Track whether the user is in edit mode
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false); // Show/hide enlarged profile image modal
+  const [ageError, setAgeError] = useState<string>(""); // Store age validation error message
+  const fileInputRef = useRef<HTMLInputElement>(null); // Reference to the file input for photo upload
   const [profileData, setProfileData] = useState({
     username: "",
     email: "",
     age: "",
     gender: "",
     photoURL: "",
-  });
+  }); // Store the user's profile data
 
+  // Fetch user profile data when the component mounts
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const session = await getSession();
+        const session = await getSession(); // Get the current user session
         if (!session) {
-          toast.error("No session found, please log in.");
+          toast.error("No session found, please log in."); // Notify if session not found
           return;
         }
-        toast.info("Fetching profile...");
-        const response = await getUserProfile(session.user.email);
-        setIsFetching(false);
+        toast.info("Fetching profile..."); // Show loading toast
+        const response = await getUserProfile(session.user.email); // Fetch user profile data from the server
+        setIsFetching(false); // Stop the fetching state
         if (response) {
-          toast.success("Profile fetched successfully!");
+          toast.success("Profile fetched successfully!"); // Show success toast
           setProfileData({
             username: response.username,
             email: response.email,
@@ -53,56 +52,61 @@ export default function ProfilePage() {
           });
         }
       } catch {
-        toast.error("Failed to fetch profile. Please try again later.");
+        toast.error("Failed to fetch profile. Please try again later."); // Show error if fetching fails
       }
     };
 
-    fetchProfile();
+    fetchProfile(); // Call the fetch function
   }, []);
 
+  // Handle profile photo click (open file input in edit mode or enlarge image in view mode)
   const handlePhotoClick = () => {
     if (isEditing) {
-      fileInputRef.current?.click();
+      fileInputRef.current?.click(); // Trigger file input click if in edit mode
     } else {
-      setShowEnlargedImage(true);
+      setShowEnlargedImage(true); // Show enlarged image modal in view mode
     }
   };
 
+  // Handle profile photo change (upload new image)
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]; // Get the selected file
     if (file) {
       try {
-        toast.info("Uploading photo...");
-        const uploadedImageUrl = await uploadToImgBB(file);
-        setProfileData((prev) => ({ ...prev, photoURL: uploadedImageUrl }));
-        toast.success("Photo uploaded successfully.");
+        toast.info("Uploading photo..."); // Show upload toast
+        const uploadedImageUrl = await uploadToImgBB(file); // Upload the photo to ImgBB
+        setProfileData((prev) => ({ ...prev, photoURL: uploadedImageUrl })); // Update profile photo URL
+        toast.success("Photo uploaded successfully."); // Show success toast
       } catch {
-        toast.error("Error uploading image. Please try again.");
+        toast.error("Error uploading image. Please try again."); // Show error toast if upload fails
       }
     }
   };
 
+  // Handle form input change for editable fields (username, age, gender)
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
     if (name === "username") {
-      const cleanedValue = value.replace(/\s/g, "");
-      setProfileData((prev) => ({ ...prev, [name]: cleanedValue }));
+      const cleanedValue = value.replace(/\s/g, ""); // Remove spaces from username
+      setProfileData((prev) => ({ ...prev, [name]: cleanedValue })); // Update username
     } else if (name === "age") {
-      setProfileData((prev) => ({ ...prev, age: value }));
+      setProfileData((prev) => ({ ...prev, age: value })); // Update age
       const ageValue = parseInt(value);
+      // Validate age input (should be between 16 and 150)
       if (value && (ageValue < 16 || ageValue > 150)) {
-        setAgeError("Age must be between 16 and 150");
+        setAgeError("Age must be between 16 and 150"); // Set age error message
       } else {
-        setAgeError("");
+        setAgeError(""); // Clear age error
       }
     } else {
-      setProfileData((prev) => ({ ...prev, [name]: value }));
+      setProfileData((prev) => ({ ...prev, [name]: value })); // Update other fields
     }
   };
 
+  // Function to update user profile on the server
   const updateProfile = async (credentials: {
     username: string;
     email: string;
@@ -111,44 +115,46 @@ export default function ProfilePage() {
     photoURL: string;
   }) => {
     try {
-      toast.info("Updating profile...");
-      const response = await updateUserProfile(credentials);
+      toast.info("Updating profile..."); // Show updating toast
+      const response = await updateUserProfile(credentials); // Send update request to server
       if (response.success) {
-        toast.success("Profile updated successfully.");
+        toast.success("Profile updated successfully."); // Show success toast
       }
     } catch {
-      toast.error("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again."); // Show error toast if update fails
     }
   };
 
+  // Handle save button click (validate age and update profile)
   const handleSave = () => {
     if (ageError) {
-      toast.error("Please fix the age error before saving.");
+      toast.error("Please fix the age error before saving."); // Show error if age is invalid
       return;
     }
-    setIsEditing(false);
-    updateProfile(profileData);
+    setIsEditing(false); // Exit edit mode
+    updateProfile(profileData); // Update profile
   };
 
+  // Handle user logout
   const handleLogout = () => {
     const logout = async () => {
       try {
-        toast.info("Logging out..."); 
-        await signOut({ callbackUrl: "/" });
-        toast.success("Logged out successfully.");
+        toast.info("Logging out..."); // Show logout toast
+        await signOut({ callbackUrl: "/" }); // Sign out the user
+        toast.success("Logged out successfully."); // Show success toast
       } catch {
-        toast.error("Failed to logout. Please try again.");
+        toast.error("Failed to logout. Please try again."); // Show error toast if logout fails
       }
     };
-    logout();
+    logout(); // Call logout function
   };
 
   return (
-    <div className="flex ">
-      <ToastContainer  />
-      <Navigation />
-      <div className="flex-1  md:ml-64 p-4">
-        <div className="min-h-[95vh]  bg-black flex items-center justify-center px-4">
+    <div className="flex">
+      <ToastContainer /> {/* Display ToastContainer for toast notifications */}
+      <Navigation /> {/* Navigation bar */}
+      <div className="flex-1 md:ml-64 p-4">
+        <div className="min-h-[95vh] bg-black flex items-center justify-center px-4">
           <div className="relative p-1 lg:p-1 rounded-2xl bg-gray-900 shadow-xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -157,6 +163,7 @@ export default function ProfilePage() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl -m-[2px] animate-gradient-border bg-[length:200%_200%]"></div>
               <div className="relative bg-gray-900 rounded-2xl shadow-xl p-8 space-y-8">
+                {/* Header */}
                 <div className="flex justify-between items-center">
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                     Profile
@@ -166,14 +173,15 @@ export default function ProfilePage() {
                       onClick={handleLogout}
                       className="text-gray-400 hover:text-red-500 transition"
                     >
-                      <FiLogOut size={24} />
+                      <FiLogOut size={24} /> {/* Logout button */}
                     </button>
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition">
-                      Logout
+                      Logout {/* Tooltip for logout */}
                     </span>
                   </div>
                 </div>
 
+                {/* Profile photo and edit/save button */}
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div
@@ -222,11 +230,12 @@ export default function ProfilePage() {
                   </button>
                 </div>
 
+                {/* Profile fields (username, email, age, gender) */}
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-gray-400 text-sm">Username</label>
                     {isFetching ? (
-                      <TransactionLoading items={1} />
+                      <TransactionLoading items={1} /> // Show loading spinner while fetching
                     ) : (
                       <input
                         type="text"
@@ -242,7 +251,7 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <label className="text-gray-400 text-sm">Email</label>
                     {isFetching ? (
-                      <TransactionLoading items={1} />
+                      <TransactionLoading items={1} /> // Show loading spinner for email
                     ) : (
                       <input
                         type="email"
@@ -257,7 +266,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <label className="text-gray-400 text-sm">Age</label>
                       {isFetching ? (
-                        <TransactionLoading items={1} width="w-36" />
+                        <TransactionLoading items={1} width="w-36" /> // Show loading spinner for age
                       ) : (
                         <input
                           type="number"
@@ -275,7 +284,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <label className="text-gray-400 text-sm">Gender</label>
                       {isFetching ? (
-                        <TransactionLoading items={1} width="w-36" />
+                        <TransactionLoading items={1} width="w-36" /> // Show loading spinner for gender
                       ) : (
                         <select
                           name="gender"
@@ -293,12 +302,13 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   {ageError && (
-                    <p className="text-red-500 text-sm mt-1">{ageError}</p>
+                    <p className="text-red-500 text-sm mt-1">{ageError}</p> // Show age error message
                   )}
                 </div>
               </div>
             </motion.div>
           </div>
+
           {/* Enlarged Image Modal */}
           <AnimatePresence>
             {showEnlargedImage && (
@@ -314,7 +324,7 @@ export default function ProfilePage() {
                     onClick={() => setShowEnlargedImage(false)}
                     className="absolute -top-10 right-0 text-white hover:text-gray-300"
                   >
-                    <FiX size={24} />
+                    <FiX size={24} /> {/* Close modal button */}
                   </button>
                   <Image
                     src={
@@ -331,7 +341,6 @@ export default function ProfilePage() {
             )}
           </AnimatePresence>
         </div>
-        
       </div>
     </div>
   );

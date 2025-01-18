@@ -1,5 +1,6 @@
-"use client";
+"use client"; // Marks the file to be rendered on the client side
 
+// Import necessary modules from Chart.js
 import { useEffect, useRef } from "react";
 import {
   Chart,
@@ -13,125 +14,131 @@ import {
   ChartConfiguration,
 } from "chart.js";
 
+// Register the necessary Chart.js components
 Chart.register(
-  BarController,
-  BarElement,
-  LinearScale,
-  CategoryScale,
-  Title,
-  Tooltip,
-  Legend
+  BarController, // Controller for bar charts
+  BarElement,     // Element for rendering bar chart bars
+  LinearScale,    // Scale for rendering numeric values on the axes
+  CategoryScale,  // Scale for categories (x-axis)
+  Title,          // Title plugin for rendering chart title
+  Tooltip,        // Tooltip plugin for showing information on hover
+  Legend          // Legend plugin for displaying chart legend
 );
 
+// Define types for the chart's props
 interface IncomeExpenseChartProps {
-  labels: string[]; // Categories or months
-  incomeData: number[]; // Income data
-  expenseData: number[]; // Expense data
-  timePeriod: string;
+  labels: string[]; // Categories or months (e.g., "January", "February")
+  incomeData: number[]; // Income data for each label
+  expenseData: number[]; // Expense data for each label
+  timePeriod: string; // Label for the x-axis (e.g., "Month")
 }
 
 export default function IncomeExpenseChart({
   labels,
   incomeData,
   expenseData,
-  timePeriod = "Time Period",
+  timePeriod = "Time Period", // Default value for the time period label on x-axis
 }: IncomeExpenseChartProps) {
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-  const chartInstanceRef = useRef<Chart | null>(null);
+  const chartRef = useRef<HTMLCanvasElement | null>(null); // Ref for the canvas element (used by Chart.js)
+  const chartInstanceRef = useRef<Chart | null>(null); // Ref for storing the chart instance
 
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!chartRef.current) return; // Ensure the canvas is present before creating the chart
 
+    // Destroy the previous chart instance (if any) to prevent memory leaks
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
 
+    // Define the chart's configuration
     const config: ChartConfiguration = {
-      type: "bar",
+      type: "bar", // Type of the chart (bar chart in this case)
       data: {
-        labels,
+        labels, // x-axis labels (e.g., "January", "February")
         datasets: [
           {
-            label: "Income",
-            data: incomeData,
-            backgroundColor: "#4caf50", // Green for income
+            label: "Income", // Label for the income dataset
+            data: incomeData, // Data for the income bars
+            backgroundColor: "#4caf50", // Green color for income bars
           },
           {
-            label: "Expense",
-            data: expenseData,
-            backgroundColor: "#f44336", // Red for expense
+            label: "Expense", // Label for the expense dataset
+            data: expenseData, // Data for the expense bars
+            backgroundColor: "#f44336", // Red color for expense bars
           },
         ],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, // Ensure the chart is responsive and adjusts to screen size
+        maintainAspectRatio: false, // Allow the aspect ratio to change with resizing
         plugins: {
           legend: {
-            display: true,
-            position: "top",
+            display: true, // Display the legend on the chart
+            position: "top", // Position the legend at the top
             labels: {
-              color: "#fff",
+              color: "#fff", // White color for the legend labels
               font: {
-                size: 14,
+                size: 14, // Font size for legend labels
               },
             },
           },
           tooltip: {
-            enabled: true,
+            enabled: true, // Enable tooltips on hover
             bodyFont: {
-              size: 14,
+              size: 14, // Font size for the tooltip body text
             },
           },
         },
         scales: {
           x: {
             title: {
-              display: true,
-              text: timePeriod,
-              color: "#fff",
+              display: true, // Display title for the x-axis
+              text: timePeriod, // Title text for the x-axis (e.g., "Month")
+              color: "#fff", // White color for the title
               font: {
-                size: 20,
+                size: 20, // Font size for the x-axis title
               },
             },
             ticks: {
-              color: "#fff",
+              color: "#fff", // White color for x-axis ticks
               font: {
-                size: 14,
+                size: 14, // Font size for x-axis tick labels
               },
             },
           },
           y: {
             title: {
-              display: true,
-              text: "Amount",
-              color: "#fff",
+              display: true, // Display title for the y-axis
+              text: "Amount", // Title text for the y-axis (e.g., "Amount")
+              color: "#fff", // White color for the title
               font: {
-                size: 16,
+                size: 16, // Font size for the y-axis title
               },
             },
             ticks: {
-              color: "#fff",
+              color: "#fff", // White color for y-axis ticks
               font: {
-                size: 14,
+                size: 14, // Font size for y-axis tick labels
               },
             },
-            beginAtZero: true,
+            beginAtZero: true, // Ensure the y-axis starts at 0
           },
         },
         animation: {
           duration: 1500, // Animation duration in milliseconds
-          easing: "easeInOutQuad", // Easing function for the animation
+          easing: "easeInOutQuad", // Easing function for the animation (smooth in/out)
         },
       },
     };
 
+    // Initialize the chart with the defined configuration
     chartInstanceRef.current = new Chart(chartRef.current, config);
-  }, [labels, incomeData, expenseData,timePeriod]);
+  }, [labels, incomeData, expenseData, timePeriod]); // Re-run the effect if any prop changes
 
   return (
     <div className="relative w-full h-80 md:h-96 lg:h-112">
-      <canvas ref={chartRef} className="w-full h-full" />
+      {/* Wrapper div to make the chart responsive */}
+      <canvas ref={chartRef} className="w-full h-full" /> {/* The canvas where the chart is rendered */}
     </div>
   );
 }
