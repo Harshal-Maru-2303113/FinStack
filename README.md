@@ -62,22 +62,6 @@ With **NextAuth.js** and Prisma, your account is safely protected. We ensure a s
 
 ---
 
-## 📱 Screenshots
-
-**Dashboard**:  
-![Dashboard Screenshot](https://ibb.co/Rzp0Z4M)
-
-**Transaction List**:  
-![Transaction Screenshot](https://ibb.co/db4q1ph)
-
-**Analytics Page**:  
-![Analytics Screenshot](https://ibb.co/r6J2Cgx)
-
-**Budgeting**:
-![Budgeting Screenshot](https://ibb.co/ydx4qQ4)
-
----
-
 ## 🛠 Installation
 
 ### Clone the repository:
@@ -112,4 +96,4 @@ Visualize your spending trends through graphs and summaries.
 ----
 
 
-Contact me on LinkedIn: [Harshal Maru](www.linkedin.com/in/harshal-maru-rakeshbhai)
+Contact me on LinkedIn: [Harshal Maru](https://www.linkedin.com/in/harshal-maru-rakeshbhai/)
