@@ -14,6 +14,9 @@
     "@prisma/client": "^6.2.1",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.7",
+    "countries-list": "^3.1.1",
+    "country-currency-map": "^2.1.7",
+    "country-list": "^2.3.0",
     "framer-motion": "^11.16.0",
     "next": "15.1.4",
     "next-auth": "^4.24.11",
@@ -21,7 +24,9 @@
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "react-select": "^5.9.0",
+    "react-toastify": "^11.0.3"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { getUserProfile } from "@/../server/getUserProfile";
 import { getSession } from "next-auth/react";
 import LoadingSpinner from "@/components/LoadingBuffer";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -42,11 +44,11 @@ export default function HeroPage() {
           const userProfile = await getUserProfile(session.user.email);
           if (userProfile) {
             setUser({ username: userProfile.username });
+            toast.success(`Welcome back, ${userProfile.username}!`);
           }
         }
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
+      } catch {
       }
     };
 
@@ -55,6 +57,7 @@ export default function HeroPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4 overflow-hidden">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       {loading ? (
         <div className="flex justify-center items-center h-screen">
           <LoadingSpinner />
@@ -117,7 +120,7 @@ export default function HeroPage() {
                 className="text-white text-3xl"
                 whileHover={{ scale: 1.05 }}
               >
-                Welcome back,{" "}
+                Welcome back, {" "}
                 <span className="text-blue-500 font-bold">{user.username}</span>
                 !
               </motion.div>
@@ -137,6 +140,7 @@ export default function HeroPage() {
                 className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-4 rounded-lg font-semibold inline-block"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => toast.info("Redirecting to Login")}
               >
                 Login
               </motion.a>
@@ -145,6 +149,7 @@ export default function HeroPage() {
                 className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-10 py-4 rounded-lg font-semibold inline-block"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => toast.info("Redirecting to Sign Up")}
               >
                 Sign Up
               </motion.a>

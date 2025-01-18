@@ -175,8 +175,8 @@ const sendBudget50 = async (email: string, category: string, budget_amount: numb
         
         <div style="background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 4px;">
           <p><strong>Category:</strong> ${category}</p>
-          <p><strong>Total Budget:</strong> $${budget_amount.toFixed(2)}</p>
-          <p><strong>Amount Spent:</strong> $${amount_spent.toFixed(2)}</p>
+          <p><strong>Total Budget:</strong> ${budget_amount.toFixed(2)}</p>
+          <p><strong>Amount Spent:</strong> ${amount_spent.toFixed(2)}</p>
           <p><strong>Percentage Used:</strong> ${((amount_spent/budget_amount) * 100).toFixed(1)}%</p>
           <p><strong>Valid Until:</strong> ${formattedDate}</p>
         </div>
@@ -222,8 +222,8 @@ const sendBudget100 = async (email: string, category: string, budget_amount: num
         
         <div style="background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 4px;">
           <p><strong>Category:</strong> ${category}</p>
-          <p><strong>Total Budget:</strong> $${budget_amount.toFixed(2)}</p>
-          <p><strong>Amount Spent:</strong> $${amount_spent.toFixed(2)}</p>
+          <p><strong>Total Budget:</strong> ${budget_amount.toFixed(2)}</p>
+          <p><strong>Amount Spent:</strong> ${amount_spent.toFixed(2)}</p>
           <p><strong>Percentage Used:</strong> ${((amount_spent/budget_amount) * 100).toFixed(1)}%</p>
           <p><strong>Valid Until:</strong> ${formattedDate}</p>
         </div>

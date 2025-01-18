@@ -18,6 +18,9 @@ import { Transaction } from "@/types/Transaction";
 import BarGraphSkeleton from "@/components/GraphLoading";
 import { AggregateTransactionData } from "@/utils/AggregateTransactionData";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
   animate: { opacity: 1, y: 0 },
@@ -34,15 +37,11 @@ const staggerContainer = {
 export default function AnalyticsPage() {
   const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
   const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
-  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
-    []
-  );
+  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>([]);
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [incomeChartLabels, setIncomeChartLabels] = useState<string[]>([]);
   const [incomeChartData, setIncomeChartData] = useState<number[]>([]);
-  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>(
-    []
-  );
+  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>([]);
   const [incomeData, setIncomeData] = useState<number[]>([]);
   const [expenseData, setExpenseData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
@@ -52,7 +51,10 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchTransactions = async () => {
       const session = await getSession();
-      if (!session) return;
+      if (!session) {
+        toast.error("Session not found. Please log in.");
+        return;
+      }
 
       const transactions = await getUserTransactions(
         session.user.email,
@@ -95,7 +97,7 @@ export default function AnalyticsPage() {
             const month = Object.keys(AggregatedData[year])[0];
             const days = AggregatedData[year][month];
             Object.entries(days).forEach(([day, Data]) => {
-              dateLabel.push(String(day)); // Add the day to dateLabel
+              dateLabel.push(String(day));
               balances.push(Number(Data.balance[0]));
               income.push(Number(Data.income[0]));
               expense.push(Number(Data.expense[0]));
@@ -130,9 +132,6 @@ export default function AnalyticsPage() {
           });
         }
 
-        console.dir(dateLabel);
-        console.dir(balances);
-
         setBalanceOverTimeLabels(dateLabel);
         setBalanceOverTimeData(balances);
         setSpendingChartLabels(Object.keys(spendingSources));
@@ -143,6 +142,9 @@ export default function AnalyticsPage() {
         setIncomeData(income);
         setExpenseData(expense);
         setIsGraphLoading(false);
+        toast.success("Graphs loaded successfully.");
+      } else {
+        toast.error("Failed to load Graphs.");
       }
     };
 
@@ -157,6 +159,7 @@ export default function AnalyticsPage() {
       <Navigation />
       <div className="flex-1 md:ml-64 p-4">
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
+          <ToastContainer />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -194,7 +197,7 @@ export default function AnalyticsPage() {
                         Total Spending:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        ${Total_Spending?.toFixed(2) || "0.00"}
+                        {Total_Spending?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     {isGraphLoading ? (
@@ -220,7 +223,6 @@ export default function AnalyticsPage() {
                         Current Balance:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        $
                         {isNaN(Number(transactionArray[0]?.balance))
                           ? "0.00"
                           : Number(transactionArray[0]?.balance).toFixed(2)}
@@ -250,7 +252,7 @@ export default function AnalyticsPage() {
                         Total Income:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        ${Total_Income?.toFixed(2) || "0.00"}
+                        {Total_Income?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     {isGraphLoading ? (
@@ -264,8 +266,6 @@ export default function AnalyticsPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Expense Over Time */}
 
                   {/* Income vs Expense */}
                   <div className="bg-gray-800 p-6 rounded-lg shadow-lg">

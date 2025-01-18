@@ -13,6 +13,15 @@ import { Filters } from "@/hooks/useFilters";
 import FilterOverlay from "@/components/FilterOverlay";
 import TransactionTable from "@/components/TransactionTable";
 import TransactionModal from "@/components/TransactionModal";
+import { ToastContainer,toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
+type FetchDataProps = {
+  start: number;
+  limit: number;
+  email: string;
+  filters: Filters;
+};
 
 export default function TransactionsPage() {
   const [transactionArray, setTransactionArray] = useState<Transaction[]>([]);
@@ -23,86 +32,93 @@ export default function TransactionsPage() {
     useFilters();
   const [isTransactionLoading, setIsTransactionLoading] = useState(true);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [hasReset,setHasReset] = useState(false);
+  const [hasReset, setHasReset] = useState(false);
 
-  const getTransactionsData = async (
-    start: number,
-    limit: number,
-    email: string,
-    filters: Filters
-  ) => {
+  const fetchTransactions = async ({
+    start,
+    limit,
+    email,
+    filters,
+  }: FetchDataProps) => {
     try {
-      const response: {
-        success: boolean;
-        message: string;
-        data: Transaction[];
-      } = await getUserTransactions(email, start, limit, filters);
-
+      toast.info("Fetching transactions...");
+      const response = await getUserTransactions(email, start, limit, filters);
       if (response.success) {
+        toast.success("Transactions fetched successfully!");
         return response.data;
-      } else {
-        console.error("Error fetching transactions:", response.message);
-        return [];
+
       }
+      toast.error(response.message);
+      return [];
     } catch (error) {
       console.error("Error fetching transactions:", error);
+      toast.error("An error occurred while fetching transactions.");
       return [];
     }
   };
 
-  const fetchInitialData = async (filters: Filters) => {
+  const fetchInitialData = async () => {
+    setIsTransactionLoading(true);
     const session = await getSession();
     if (!session) {
-      throw new Error("User not authenticated");
+      toast.error("User not authenticated");
+      return;
     }
-    const initialData = await getTransactionsData(
-      0,
-      10,
-      session.user.email,
-      filters
-    );
+
+    const data = await fetchTransactions({
+      start: 0,
+      limit: 10,
+      email: session.user.email,
+      filters,
+    });
+    setTransactionArray(data);
+    setHasMoreData(data.length >= 10);
     setIsTransactionLoading(false);
-    setTransactionArray(initialData);
-    if (initialData.length < 10) {
-      setHasMoreData(false);
-    }
   };
 
   useEffect(() => {
-    fetchInitialData(filters);
+    fetchInitialData();
   }, [hasReset]);
 
   const loadMoreTransactions = async () => {
     const session = await getSession();
     if (!session) {
-      throw new Error("User not authenticated");
+      toast.error("User not authenticated");
+      return;
     }
-    const start = transactionArray.length;
-    const newTransactions = await getTransactionsData(
-      start,
-      10,
-      session.user.email,
-      filters
-    );
+    toast.info("Fetching more transactions...");
+    const newTransactions = await fetchTransactions({
+      start: transactionArray.length,
+      limit: 10,
+      email: session.user.email,
+      filters,
+    });
+
     if (newTransactions.length > 0) {
+      toast.success("More transactions fetched successfully!");
       setTransactionArray((prev) => [...prev, ...newTransactions]);
-      if (newTransactions.length < 10) {
-        setHasMoreData(false);
-      }
+      if (newTransactions.length < 10) setHasMoreData(false);
     } else {
       setHasMoreData(false);
+      toast.info("No more transactions to fetch.");
     }
   };
 
   const applyFilters = async () => {
     setIsFilterActive(checkActiveFilters());
-    setIsTransactionLoading(true);
-    await fetchInitialData(filters);
+    await fetchInitialData();
     setFilterOverlay(false);
+  };
+
+  const resetFilterHandler = () => {
+    resetFilters();
+    setIsFilterActive(false);
+    setHasReset((prev) => !prev);
   };
 
   return (
     <div className="flex">
+      <ToastContainer />
       <Navigation />
       <div className="flex-1 md:ml-64 p-4">
         <div className="p-4 md:p-6 lg:p-8">
@@ -131,9 +147,7 @@ export default function TransactionsPage() {
                       animate={{
                         scale: isFilterActive ? [1, 1.05, 1] : 1,
                       }}
-                      transition={{
-                        duration: 0.3,
-                      }}
+                      transition={{ duration: 0.3 }}
                     >
                       <div className="flex items-center">
                         <FiFilter className="inline mr-2" />
@@ -155,11 +169,7 @@ export default function TransactionsPage() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-                      onClick={() => {
-                        resetFilters();
-                        setIsFilterActive(false);
-                        setHasReset(e=>!e)
-                      }}
+                      onClick={resetFilterHandler}
                     >
                       Reset
                     </motion.button>
@@ -176,7 +186,6 @@ export default function TransactionsPage() {
                 isLoading={isTransactionLoading}
                 onRowClick={setPopupContent}
               />
-              {/* Load More Button */}
               {!isTransactionLoading && hasMoreData && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -199,7 +208,6 @@ export default function TransactionsPage() {
                   No more data to load
                 </div>
               )}
-              {/* Popup Modal */}
               {popupContent && (
                 <TransactionModal
                   transaction={popupContent}
@@ -210,7 +218,6 @@ export default function TransactionsPage() {
           </motion.div>
         </div>
       </div>
-      {/* Filter Overlay */}
       {filterOverlay && (
         <FilterOverlay
           filters={filters}

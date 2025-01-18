@@ -97,7 +97,7 @@ export default function TransactionModal({
           <p className="flex items-center gap-4">
             <span className="font-semibold text-xl text-blue-400">Balance:</span>
             <span className="block text-xl text-gray-200">
-              ${Number(transaction.balance).toFixed(2)}
+              {Number(transaction.balance).toFixed(2)}
             </span>
           </p>
         </div>

@@ -11,6 +11,11 @@ import updateUserProfile from "../../../server/updateUserProfile";
 import { signOut } from "next-auth/react";
 import TransactionLoading from "@/components/TransactionLoading";
 import uploadToImgBB from "../../../server/uploadToImgBB";
+import { ToastContainer, toast } from "react-toastify"; // Import ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // Import CSS for Toastify
+
+
+
 
 export default function ProfilePage() {
   const [isFetching, setIsFetching] = useState(true);
@@ -31,26 +36,24 @@ export default function ProfilePage() {
       try {
         const session = await getSession();
         if (!session) {
-          console.log("No Session");
+          toast.error("No session found, please log in.");
           return;
         }
-
+        toast.info("Fetching profile...");
         const response = await getUserProfile(session.user.email);
         setIsFetching(false);
-        console.dir(response);
         if (response) {
-          console.dir(response);
-          setProfileData((prev) => ({
-            ...prev,
+          toast.success("Profile fetched successfully!");
+          setProfileData({
             username: response.username,
             email: response.email,
             age: response.age.toString(),
             gender: response.gender,
             photoURL: response.photoURL,
-          }));
+          });
         }
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+      } catch {
+        toast.error("Failed to fetch profile. Please try again later.");
       }
     };
 
@@ -65,22 +68,20 @@ export default function ProfilePage() {
     }
   };
 
-  console.dir(profileData);
-
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // setNewPhoto(file); // This line is commented out because setNewPhoto is not defined
       try {
+        toast.info("Uploading photo...");
         const uploadedImageUrl = await uploadToImgBB(file);
         setProfileData((prev) => ({ ...prev, photoURL: uploadedImageUrl }));
-      } catch (error) {
-        console.error("Error uploading image:", error);
+        toast.success("Photo uploaded successfully.");
+      } catch {
+        toast.error("Error uploading image. Please try again.");
       }
     }
   };
 
-  // Update the handleInputChange function
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -88,11 +89,9 @@ export default function ProfilePage() {
 
     if (name === "username") {
       const cleanedValue = value.replace(/\s/g, "");
-      console.log(cleanedValue);
       setProfileData((prev) => ({ ...prev, [name]: cleanedValue }));
     } else if (name === "age") {
       setProfileData((prev) => ({ ...prev, age: value }));
-      console.log(value);
       const ageValue = parseInt(value);
       if (value && (ageValue < 16 || ageValue > 150)) {
         setAgeError("Age must be between 16 and 150");
@@ -112,19 +111,19 @@ export default function ProfilePage() {
     photoURL: string;
   }) => {
     try {
-      console.dir("credentials", credentials);
+      toast.info("Updating profile...");
       const response = await updateUserProfile(credentials);
       if (response.success) {
-        window.alert("Profile Updated Successfully");
+        toast.success("Profile updated successfully.");
       }
-    } catch (error) {
-      console.dir(error);
+    } catch {
+      toast.error("Failed to update profile. Please try again.");
     }
   };
 
   const handleSave = () => {
     if (ageError) {
-      alert("Please fix the age error before saving");
+      toast.error("Please fix the age error before saving.");
       return;
     }
     setIsEditing(false);
@@ -134,9 +133,11 @@ export default function ProfilePage() {
   const handleLogout = () => {
     const logout = async () => {
       try {
+        toast.info("Logging out..."); 
         await signOut({ callbackUrl: "/" });
-      } catch (error) {
-        console.error("Failed to logout:", error);
+        toast.success("Logged out successfully.");
+      } catch {
+        toast.error("Failed to logout. Please try again.");
       }
     };
     logout();
@@ -144,6 +145,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex ">
+      <ToastContainer  />
       <Navigation />
       <div className="flex-1  md:ml-64 p-4">
         <div className="min-h-[95vh]  bg-black flex items-center justify-center px-4">
@@ -255,7 +257,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <label className="text-gray-400 text-sm">Age</label>
                       {isFetching ? (
-                        <TransactionLoading items={1} width="w-36"/>
+                        <TransactionLoading items={1} width="w-36" />
                       ) : (
                         <input
                           type="number"
@@ -329,6 +331,7 @@ export default function ProfilePage() {
             )}
           </AnimatePresence>
         </div>
+        
       </div>
     </div>
   );

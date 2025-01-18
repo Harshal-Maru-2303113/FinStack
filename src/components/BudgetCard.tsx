@@ -3,7 +3,13 @@ import deleteBudget from "../../server/deleteBudget";
 import { BudgetFetchData } from "@/types/BudgetData";
 import { categories } from "@/utils/categories";
 
-const BudgetCard = ({ budget, isCompleted }: { budget: BudgetFetchData, isCompleted: boolean }) => {
+const BudgetCard = ({
+  budget,
+  isCompleted,
+}: {
+  budget: BudgetFetchData;
+  isCompleted: boolean;
+}) => {
   const percentUsed = (budget.amount_spent / budget.budget_amount) * 100;
   return (
     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
@@ -27,7 +33,7 @@ const BudgetCard = ({ budget, isCompleted }: { budget: BudgetFetchData, isComple
           >
             <span className="text-gray-400">Spent / Budget</span>
             <span className="text-white font-semibold">
-              ${budget.amount_spent.toFixed(2)} / ${" "}
+              {budget.amount_spent.toFixed(2)} / {" "}
               {budget.budget_amount.toFixed(2)}
             </span>
           </motion.div>
@@ -86,7 +92,6 @@ const BudgetCard = ({ budget, isCompleted }: { budget: BudgetFetchData, isComple
     </div>
   );
 };
-
 
 const BudgetCardExport = { BudgetCard };
 export default BudgetCardExport;

@@ -80,7 +80,7 @@ export default function TransactionTable({
                   }`}
                 >
                   {transaction.transaction_type === "credit" ? "+" : "-"}
-                  ${transaction.amount}
+                  {transaction.amount}
                 </td>
               </motion.tr>
             ))

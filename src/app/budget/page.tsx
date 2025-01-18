@@ -14,6 +14,8 @@ import BudgetCard from "@/components/BudgetCard";
 import getCompletedBudget, {
   CompletedBudget,
 } from "../../../server/getCompletedBudget";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export interface Budget {
   category_id: number;
@@ -45,8 +47,10 @@ export default function BudgetPage() {
       }
       setEmail(session.user.email);
       try {
+        toast.info("Fetching budget data...");
         const response = await getBudgetData(session.user.email);
-        if (response.success) {
+        if (response.success) { 
+          toast.success("Budget data fetched successfully");
           const allBudgets = response.data as BudgetFetchData[];
           setBudgets(
             allBudgets.filter(
@@ -54,7 +58,7 @@ export default function BudgetPage() {
             )
           );
         } else {
-          console.error("Failed to fetch budget data:");
+          toast.error("Failed to fetch budget data");
         }
         try {
           const completedResponse = await getCompletedBudget(
@@ -65,13 +69,13 @@ export default function BudgetPage() {
               completedResponse.data as CompletedBudget[];
             setCompletedBudgets(completedBudgets);
           } else {
-            console.error("Failed to fetch completed budget data:");
+            toast.error("Failed to fetch completed budget data");
           }
         } catch (error) {
-          console.error("Error fetching completed budget data:", error);
+          toast.error("Error fetching completed budget data: " + error);
         }
       } catch (error) {
-        console.error("Error fetching budget data:", error);
+        toast.error("Error fetching budget data: " + error);
       }
     };
     fetchBudget();
@@ -80,8 +84,7 @@ export default function BudgetPage() {
   const addBudget = async (newBudget: Budget) => {
     try {
       if (!newBudget || !email) {
-        console.error("Invalid payload. Budget or email is missing.");
-        alert("Failed to add budget. Please try again.");
+        toast.error("Invalid payload. Budget or email is missing.");
         return;
       }
 
@@ -94,16 +97,16 @@ export default function BudgetPage() {
       });
 
       if (response.success) {
-        alert("Budget added successfully");
+        toast.success("Budget added successfully");
         setIsPopupOpen(false);
         setCategory("");
         setAmount("");
         setValidUntil("");
       } else {
-        alert(response.message);
+        toast.error(response.message);
       }
     } catch (error) {
-      console.error("Error while adding budget:", error);
+      toast.error("Error while adding budget: " + error);
     }
   };
 
@@ -116,12 +119,12 @@ export default function BudgetPage() {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (parseFloat(amount) < 0) {
-      alert("Amount cannot be negative");
+      toast.error("Amount cannot be negative");
       return;
     }
 
     if (selectedDate < today) {
-      alert("Valid date cannot be in the past");
+      toast.error("Valid date cannot be in the past");
       return;
     }
 
@@ -138,6 +141,7 @@ export default function BudgetPage() {
   return (
     <div className="flex">
       <Navigation />
+      <ToastContainer />
       <div className="flex-1 md:ml-64 p-4">
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
           <motion.div

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { categories } from "@/utils/categories";
 import addTransaction from "@/../server/addTransaction";
 import { getSession } from "next-auth/react";
@@ -17,7 +19,7 @@ export default function TransactionPage() {
     transaction_type: transactionType;
     description: string;
     category_id: number;
-}
+  }
 
   const [amount, setAmount] = useState("");
   const [transaction_type, setTransactionType] = useState<transactionType>("credit");
@@ -26,6 +28,7 @@ export default function TransactionPage() {
 
   const sentTransactionData = async () => {
     try {
+      toast.info("Transaction is being sent...");
       const data: TransactionData = {
         amount: Number(amount),
         transaction_type,
@@ -34,36 +37,43 @@ export default function TransactionPage() {
       };
       const session = await getSession();
       if (!session) {
-        alert("Please log in to add a transaction.");
+        toast.error("Please log in to add a transaction.");
         return;
       }
-      const response = await addTransaction(data,session.user.email);
+      const response = await addTransaction(data, session.user.email);
 
       if (response.success) {
-        const category:string = String(categories.find((cat) => cat.category_id === Number(categoryId))?.name);
-        const budget = await addBudgetAmount(Number(data.amount),data.transaction_type,Number(data.category_id),response.date_time || new Date(),session.user.email,category);
-        console.dir(budget);
-        alert("Transaction added successfully!");
+        const category: string = String(categories.find((cat) => cat.category_id === Number(categoryId))?.name);
+        await addBudgetAmount(
+          Number(data.amount),
+          data.transaction_type,
+          Number(data.category_id),
+          response.date_time || new Date(),
+          session.user.email,
+          category
+        );
+        toast.success("Transaction added successfully!");
         router.push("/dashboard");
       } else {
-        alert(response.message);
-        setAmount("");
-        setTransactionType("credit");
-        setDescription("");
-        setCategoryId("");
+        toast.error(response.message);
+        resetForm();
         return;
       }
     } catch (error) {
-      alert("Error adding transaction");
       console.error("Error adding transaction:", error);
-      setAmount("");
-
-      setTransactionType("credit");
-      setDescription("");
-      setCategoryId("");
+      toast.error("Error adding transaction");
+      resetForm();
       return;
     }
   };
+
+  const resetForm = () => {
+    setAmount("");
+    setTransactionType("credit");
+    setDescription("");
+    setCategoryId("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     sentTransactionData();
@@ -71,6 +81,7 @@ export default function TransactionPage() {
 
   return (
     <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <ToastContainer position="top-right" autoClose={3000} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -99,9 +110,7 @@ export default function TransactionPage() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">
-                  Transaction Type
-                </label>
+                <label className="block text-gray-300 mb-2">Transaction Type</label>
                 <select
                   value={transaction_type}
                   onChange={(e) => setTransactionType(e.target.value as transactionType)}

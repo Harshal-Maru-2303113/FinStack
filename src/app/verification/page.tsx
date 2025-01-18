@@ -11,6 +11,8 @@ import {
 import { motion } from "framer-motion";
 import { FiMail } from "react-icons/fi";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import verifyEmail from "@/pages/api/auth/verifyEmail";
 import resendOTP from "@/pages/api/auth/resendOTP";
 
@@ -80,21 +82,16 @@ function VerificationPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpString = otp.join("");
-    console.log("Submitting verification:", {
-      email,
-      otpString,
-      otpLength: otpString.length,
-      individualDigits: otp,
-    });
 
     try {
+      toast.info("Verifying OTP...");
       const response = await verifyEmail(email, otpString);
-
       if (response.success) {
+        toast.success("Verification successful!");
         router.push("/login");
       }
-    } catch (error: unknown) {
-      console.error("Verification error:", error);
+    } catch {
+      toast.error("Verification failed. Please try again.");
       setOtp(["", "", "", "", "", ""]);
       inputRefs[0]?.current?.focus();
     }
@@ -102,21 +99,19 @@ function VerificationPageContent() {
 
   const handleResendOTP = async () => {
     try {
+      toast.info("Resending OTP...");
       const response = await resendOTP(email);
-      console.dir(response);
-      alert("Otp resent successfully");
-    } catch (error: unknown) {
-      console.error("Error resending OTP:", error);
-      // Add error notification
-      alert("Failed to resend OTP. Please try again.");
+      if (response.success) {
+        toast.success("OTP resent successfully!");
+      }
+    } catch {
+      toast.error("Failed to resend OTP. Please try again.");
     }
   };
 
-  // Add visual feedback for verification status
-  const [verificationStatus] = useState<string>("");
-
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
+      <ToastContainer />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -175,12 +170,6 @@ function VerificationPageContent() {
               Resend
             </button>
           </div>
-
-          {verificationStatus && (
-            <div className="text-center text-red-500 mt-2">
-              {verificationStatus}
-            </div>
-          )}
         </form>
       </motion.div>
     </div>

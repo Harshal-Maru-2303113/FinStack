@@ -21,12 +21,11 @@ import TransactionModal from "@/components/TransactionModal";
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance";
 import SpendingChartByCategories from "@/components/graphs/SpendingChartByCategories";
 import BalanceChart from "@/components/graphs/BalanceChart";
-
 import BarGraphSkeleton from "@/components/GraphLoading";
 import ProcessTransactionData from "@/utils/processTransactionData";
 import { AggregateTransactionData } from "@/utils/AggregateTransactionData";
-
-// Register the required components
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Constants
 const QUICK_STATS = (amount: number, income: number, expense: number) => [
@@ -66,104 +65,120 @@ export default function Dashboard() {
   const [GraphDate, setGraphDate] = useState<string>("Time Period");
 
   useEffect(() => {
-    console.dir(transactionArray);
-  }, [transactionArray]);
-
-  useEffect(() => {
     const fetchTransactions = async () => {
       const session = await getSession();
-      if (!session) return;
+      if (!session) {
+        toast.error("Session not found. Please log in.");
+        return;
+      }
 
-      const transactions = await getUserTransactions(
-        session.user.email,
-        0,
-        undefined,
-        {} as filter
-      );
-      if (transactions.success) {
-        setTransactionArray(transactions.data.reverse());
-        setBalance(
-          Number(transactions.data[transactions.data.length - 1].balance)
-        );
-        const FinanceData = await calculateMonthlyFinance(session.user.email);
-        setIncome(FinanceData.totalIncome);
-        setExpense(FinanceData.totalExpense);
-
-        const spendingSources: { [key: string]: number } = {};
-        transactions.data.forEach((transaction: Transaction) => {
-          const category = transaction.category_name || "Others";
-          const isCredit =
-            transaction.transaction_type === "credit" ? true : false;
-          if (!isCredit) {
-            spendingSources[category] =
-              (spendingSources[category] || 0) + Number(transaction.amount);
-          }
-        });
-
-        const processTransactions = ProcessTransactionData(transactions.data);
-        const AggregatedData = await AggregateTransactionData(
-          processTransactions
+      try {
+        toast.info("Fetching transactions...");
+        const transactions = await getUserTransactions(
+          session.user.email,
+          0,
+          undefined,
+          {} as filter
         );
 
-        const balances: number[] = [];
-        const dateLabel: string[] = [];
+        if (transactions.success) {
+          toast.success("Transactions fetched successfully!");
+          setTransactionArray(transactions.data.reverse());
+          setBalance(
+            Number(transactions.data[transactions.data.length - 1].balance)
+          );
+          const FinanceData = await calculateMonthlyFinance(session.user.email);
+          setIncome(FinanceData.totalIncome);
+          setExpense(FinanceData.totalExpense);
 
-        if (Object.keys(AggregatedData).length === 1) {
-          const year = Number(Object.keys(AggregatedData)[0]);
-          if (Object.keys(AggregatedData[year]).length === 1) {
-            const month = Object.keys(AggregatedData[year])[0];
-            const days = AggregatedData[year][month];
-            Object.entries(days).forEach(([day, Data]) => {
-              dateLabel.push(String(day)); // Add the day to dateLabel
-              balances.push(Number(Data.balance[0]));
-              setGraphDate(month + " " + year);
-            });
-          } else {
-            const months = Object.keys(AggregatedData[year]);
-            Object.entries(months).forEach(([month]) => {
+          const spendingSources: { [key: string]: number } = {};
+          transactions.data.forEach((transaction: Transaction) => {
+            const category = transaction.category_name || "Others";
+            const isCredit =
+              transaction.transaction_type === "credit" ? true : false;
+            if (!isCredit) {
+              spendingSources[category] =
+                (spendingSources[category] || 0) + Number(transaction.amount);
+            }
+          });
+
+          const processTransactions = ProcessTransactionData(transactions.data);
+          const AggregatedData = await AggregateTransactionData(
+            processTransactions
+          );
+
+          const balances: number[] = [];
+          const dateLabel: string[] = [];
+
+          // Process graph data
+          if (Object.keys(AggregatedData).length === 1) {
+            const year = Number(Object.keys(AggregatedData)[0]);
+            if (Object.keys(AggregatedData[year]).length === 1) {
+              const month = Object.keys(AggregatedData[year])[0];
               const days = AggregatedData[year][month];
               Object.entries(days).forEach(([day, Data]) => {
-                dateLabel.push(String(day) + " " + month);
+                dateLabel.push(String(day));
                 balances.push(Number(Data.balance[0]));
-                setGraphDate(String(year));
+                setGraphDate(month + " " + year);
+              });
+            } else {
+              const months = Object.keys(AggregatedData[year]);
+              Object.entries(months).forEach(([month]) => {
+                const days = AggregatedData[year][month];
+                Object.entries(days).forEach(([day, Data]) => {
+                  dateLabel.push(String(day) + " " + month);
+                  balances.push(Number(Data.balance[0]));
+                  setGraphDate(String(year));
+                });
+              });
+            }
+          } else {
+            const years = Number(Object.keys(AggregatedData));
+            Object.entries(years).forEach(([year]) => {
+              const months = Object.keys(AggregatedData[Number(year)]);
+              Object.entries(months).forEach(([month]) => {
+                const days = AggregatedData[Number(year)][month];
+                Object.entries(days).forEach(([day, Data]) => {
+                  dateLabel.push(
+                    String(day) + " " + month + " " + String(year)
+                  );
+                  balances.push(Number(Data.balance[0]));
+                });
               });
             });
           }
+          toast.success("Graph data fetched successfully!");
+          setBalanceOverTimeLabels(dateLabel);
+          setBalanceOverTimeData(balances);
+
+          setIsGraphLoading(false);
+          setSpendingChartLabels(Object.keys(spendingSources));
+          setSpendingChartData(Object.values(spendingSources));
+          
         } else {
-          const years = Number(Object.keys(AggregatedData));
-          Object.entries(years).forEach(([year]) => {
-            const months = Object.keys(AggregatedData[Number(year)]);
-            Object.entries(months).forEach(([month]) => {
-              const days = AggregatedData[Number(year)][month];
-              Object.entries(days).forEach(([day, Data]) => {
-                dateLabel.push(String(day) + " " + month + " " + String(year));
-                balances.push(Number(Data.balance[0]));
-              });
-            });
-          });
+          toast.error("Failed to fetch transactions.");
         }
-
-        setBalanceOverTimeLabels(dateLabel);
-        setBalanceOverTimeData(balances);
-
-        setIsGraphLoading(false);
-        setSpendingChartLabels(Object.keys(spendingSources));
-        setSpendingChartData(Object.values(spendingSources));
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        toast.error("An error occurred while fetching transactions.");
+      } finally {
+        setIsFinanceValuesLoading(false);
+        setIsTransactionLoading(false);
       }
-      setIsFinanceValuesLoading(false);
-      setIsTransactionLoading(false);
     };
 
     fetchTransactions();
   }, []);
+
   const Total_Spending = spendingChartData.reduce((acc, curr) => acc + curr, 0);
 
   return (
     <div className="flex">
       <Navigation />
       <div className="flex-1 md:ml-64 p-4">
+        <ToastContainer />
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
-          <motion.div
+        <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-[1400px] mx-auto"
@@ -228,7 +243,7 @@ export default function Dashboard() {
                         Total Spending:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        ${Total_Spending?.toFixed(2)}
+                        {Total_Spending?.toFixed(2)}
                       </span>
                     </div>
 
@@ -257,7 +272,7 @@ export default function Dashboard() {
                         Current Balance:
                       </span>
                       <span className="block text-xl md:text-2xl font-bold text-white">
-                        $
+                        
                         {isNaN(Number(transactionArray[0]?.balance))
                           ? "0.00"
                           : Number(transactionArray[0]?.balance).toFixed(2)}
@@ -332,7 +347,7 @@ export default function Dashboard() {
                               {transaction.transaction_type === "credit"
                                 ? "+"
                                 : "-"}
-                              ${Number(transaction.amount).toFixed(2)}
+                              {Number(transaction.amount).toFixed(2)}
                             </span>
                           </motion.div>
                         ))

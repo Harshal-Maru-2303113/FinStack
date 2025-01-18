@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 import signup from "@/pages/api/auth/signup";
-
+import { ToastContainer,toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export default function SignupPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,21 +40,23 @@ export default function SignupPage() {
     password: string;
   }) => {
     try {
+      toast.info("Signing up...");
       const response = await signup(credentials);
-      console.dir(response);
       if (response.success) {
+        toast.success("Signup successful! Please verify your email.");
         router.push(`/verification?email=${encodeURIComponent(credentials.email)}`); // Redirect to verification page
+      } else {
+        toast.error(response.message || "Signup failed. Please try again.");
       }
-    } catch (error: unknown) {
-      console.error("Error during signup:", error);
-      setError("Failed to register user");
+    } catch {
+      toast.error("Failed to register user. Please try again later.");
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
     const credentials = {
@@ -67,6 +69,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
+      <ToastContainer />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -79,12 +82,6 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
             Create Account
           </h1>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-500 rounded-lg p-3 text-center">
-              {error}
-            </div>
-          )}
 
           <div className="space-y-6">
             <div className="relative">
