@@ -1,11 +1,9 @@
-"use client";
-
-import { BudgetFetchData } from "@/types/BudgetData";
-import { categories } from "@/utils/categories";
 import { motion } from "framer-motion";
 import deleteBudget from "../../server/deleteBudget";
+import { BudgetFetchData } from "@/types/BudgetData";
+import { categories } from "@/utils/categories";
 
-const BudgetCard = (budget: BudgetFetchData) => {
+const BudgetCard = ({ budget, isCompleted }: { budget: BudgetFetchData, isCompleted: boolean }) => {
   const percentUsed = (budget.amount_spent / budget.budget_amount) * 100;
   return (
     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
@@ -68,22 +66,27 @@ const BudgetCard = (budget: BudgetFetchData) => {
             </span>
           </motion.div>
         </div>
-        {/* Delete Button */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          onClick={() => {
-            deleteBudget(budget.email, Number(budget.category_id));
-            window.location.reload();
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 transition-colors duration-300"
-        >
-          Delete
-        </motion.button>
+
+        {/* Delete Button - Only if the budget is not completed */}
+        {!isCompleted && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            onClick={() => {
+              deleteBudget(budget.email, Number(budget.category_id));
+              window.location.reload();
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 transition-colors duration-300"
+          >
+            Delete
+          </motion.button>
+        )}
       </div>
     </div>
   );
 };
 
-export { BudgetCard };
+
+const BudgetCardExport = { BudgetCard };
+export default BudgetCardExport;

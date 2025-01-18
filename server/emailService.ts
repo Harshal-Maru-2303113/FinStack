@@ -228,7 +228,7 @@ const sendBudget100 = async (email: string, category: string, budget_amount: num
           <p><strong>Valid Until:</strong> ${formattedDate}</p>
         </div>
  
-        <p>Your budget limit has been reached. The budget card will be automatically deleted from your dashboard.</p>
+        <p>Your budget limit has been reached</p>
         <p>To continue tracking expenses in this category, please create a new budget.</p>
         <p>You can view detailed analytics by logging into your FinStack account.</p>
         

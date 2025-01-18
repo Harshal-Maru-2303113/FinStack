@@ -1,3 +1,4 @@
+// Updated Budget Page Component with Completed Budgets Section
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,7 +10,10 @@ import addBudgetData from "../../../server/addBudgetData";
 import { categories } from "@/utils/categories";
 import getBudgetData from "../../../server/getBudgetData";
 import { BudgetFetchData } from "@/types/BudgetData";
-import { BudgetCard } from "@/components/BudgetCard";
+import BudgetCard from "@/components/BudgetCard";
+import getCompletedBudget, {
+  CompletedBudget,
+} from "../../../server/getCompletedBudget";
 
 export interface Budget {
   category_id: number;
@@ -21,6 +25,9 @@ export interface Budget {
 // Main Budget Page Component
 export default function BudgetPage() {
   const [budgets, setBudgets] = useState<BudgetFetchData[]>([]);
+  const [completedBudgets, setCompletedBudgets] = useState<CompletedBudget[]>(
+    []
+  );
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [email, setEmail] = useState("");
 
@@ -29,6 +36,7 @@ export default function BudgetPage() {
   const [category_id, setCategory_id] = useState(0);
   const [amount, setAmount] = useState("");
   const [validUntil, setValidUntil] = useState("");
+
   useEffect(() => {
     const fetchBudget = async () => {
       const session = await getSession();
@@ -39,16 +47,35 @@ export default function BudgetPage() {
       try {
         const response = await getBudgetData(session.user.email);
         if (response.success) {
-          setBudgets(response.data as BudgetFetchData[]);
+          const allBudgets = response.data as BudgetFetchData[];
+          setBudgets(
+            allBudgets.filter(
+              (budget) => budget.amount_spent < budget.budget_amount
+            )
+          );
         } else {
           console.error("Failed to fetch budget data:");
+        }
+        try {
+          const completedResponse = await getCompletedBudget(
+            session.user.email
+          );
+          if (completedResponse.success) {
+            const completedBudgets =
+              completedResponse.data as CompletedBudget[];
+            setCompletedBudgets(completedBudgets);
+          } else {
+            console.error("Failed to fetch completed budget data:");
+          }
+        } catch (error) {
+          console.error("Error fetching completed budget data:", error);
         }
       } catch (error) {
         console.error("Error fetching budget data:", error);
       }
     };
     fetchBudget();
-  }, []); // Add the empty dependency array to run this effect only once on mount
+  }, []);
 
   const addBudget = async (newBudget: Budget) => {
     try {
@@ -80,8 +107,6 @@ export default function BudgetPage() {
     }
   };
 
-
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -110,9 +135,6 @@ export default function BudgetPage() {
     addBudget(newBudget);
   };
 
-  // Budget Card Component
-  
-
   return (
     <div className="flex">
       <Navigation />
@@ -138,9 +160,38 @@ export default function BudgetPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {budgets.length > 0
                   ? budgets.map((budget, index) => (
-                      <BudgetCard key={index} {...budget}/>
+                      <BudgetCard.BudgetCard
+                        key={index}
+                        budget={budget}
+                        isCompleted={false}
+                      />
                     ))
-                  : ""}
+                  : "No active budgets available."}
+              </div>
+            </div>
+
+            {/* Completed Budgets Section */}
+            <div className="bg-gray-900 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 mt-8 space-y-6 md:space-y-8">
+              <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                Completed Budgets
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {completedBudgets.length > 0
+                  ? completedBudgets.map((budget, index) => (
+                      <BudgetCard.BudgetCard
+                        key={index}
+                        budget={{
+                          ...budget,
+                          budget_id: budget.id,
+                          created_at: new Date(),
+                          updated_at: new Date(),
+                          emailSent50: false,
+                          emailSent100: false
+                        }}
+                        isCompleted={true}
+                      />
+                    ))
+                  : "No completed budgets yet."}
               </div>
             </div>
           </motion.div>

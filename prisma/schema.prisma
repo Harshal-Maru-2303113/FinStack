@@ -22,19 +22,25 @@ model Transaction {
 
   user            User      @relation(fields: [email], references: [email])
   category        Category  @relation(fields: [category_id], references: [category_id])
+
+  @@index([email])           // Index for quicker lookups by email
+  @@index([category_id])     // Index for category-based queries
+  @@index([transaction_type]) // Index for transaction type queries
 }
 
 model OTP {
   email      String    @id @db.VarChar(255)
   otp        String    @db.VarChar(6)
   expires_at DateTime
+
+  @@index([email])      // Index to optimize expiry checks
 }
 
 model User {
   id          Int       @id @default(autoincrement())
   username    String    @db.VarChar(255)
   email       String    @unique @db.VarChar(255)
-  password    String      @db.Text
+  password    String    @db.Text
   isVerified  Boolean   @default(false)
   age         Int
   gender      String    @db.VarChar(50)
@@ -42,23 +48,31 @@ model User {
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 
-  transactions Transaction[]
-  budgets      Budget[] // Relation to the Budget model
+  transactions      Transaction[]
+  budgets           Budget[]          // Relation to the Budget model
+  completedBudgets  CompletedBudget[] // Relation to the CompletedBudget model
+
+  @@index([email])         // Index for email lookups (already unique but retained for consistency)
+  @@index([isVerified])    // Index for verification status queries
 }
 
 model Category {
   category_id   Int         @id @default(autoincrement())
   category_name String      @db.VarChar(100)
 
-  transactions  Transaction[]
-  budgets       Budget[]    // Relation to the Budget model
-}
+  transactions     Transaction[]
+  budgets          Budget[]          // Relation to the Budget model
+  completedBudgets CompletedBudget[] // Relation to the CompletedBudget model
 
+  @@index([category_id])    // Index for category ID lookups
+  @@index([category_name])  // Index for category name lookups
+}
 
 enum TransactionType {
   credit
   debit
 }
+
 model Budget {
   budget_id     Int       @id @default(autoincrement())
   email    String
@@ -75,8 +89,24 @@ model Budget {
   category      Category  @relation(fields: [category_id], references: [category_id])
 
   @@unique([email, category_id]) // Ensures a user can only set one budget per category
+  @@index([email])              // Index for quicker lookups by email
+  @@index([category_id])        // Index for category-based queries
+  @@index([valid_until])        // Index for queries on expiration
 }
 
+model CompletedBudget {
+  completed_budget_id Int       @id @default(autoincrement())
+  email               String    // User email
+  category_id         Int       // Category of the budget
+  budget_amount       Decimal   @db.Decimal(10, 2)
+  amount_spent        Decimal   @db.Decimal(10, 2)
+  valid_until         DateTime  // The original valid_until date of the budget
+  completed_at        DateTime  @default(now()) // When the budget was completed
 
+  user                User      @relation(fields: [email], references: [email])
+  category            Category  @relation(fields: [category_id], references: [category_id])
 
-
+  @@index([email])             // Index for quicker lookups by email
+  @@index([category_id])       // Index for category-based queries
+  @@index([valid_until])       // Index for queries on expiration
+}

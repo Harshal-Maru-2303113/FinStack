@@ -3,6 +3,7 @@
 import { PrismaClient } from '@prisma/client';
 import { sendBudget100, sendBudget50 } from './emailService';
 import deleteBudget from './deleteBudget';
+import addCompletedBudget from './addCompletedBudget';
 
 const prisma = new PrismaClient();
 
@@ -58,12 +59,27 @@ export default async function addBudgetAmount(amount:number, transaction_type:tr
                         if(Number(updatedBudgets.amount_spent)/Number(updatedBudgets.budget_amount)>=1 && !updatedBudgets.emailSent100){
                             const emailSent100 = await sendBudget100(email,category,Number(updatedBudgets.budget_amount),Number(updatedBudgets.amount_spent),updatedBudgets.valid_until);
                             if(emailSent100){
+                                const completedBudget = await addCompletedBudget(email,category_id,Number(updatedBudgets.budget_amount),Number(updatedBudgets.amount_spent),updatedBudgets.valid_until);
+                                if(completedBudget){
+                                    console.log("Budget completed");
+                                }
                                 const budgetDeleted = await deleteBudget(email,category_id);
                                 if(budgetDeleted){
                                     console.log("Budget deleted");
                                 }
                             }
                         }
+                    }
+                    return { success: true, message: 'budget' };
+                }
+                else if(date_time>=budgets[0].valid_until){
+                    const completedBudget = await addCompletedBudget(email,category_id,Number(budgets[0].budget_amount),Number(budgets[0].amount_spent),budgets[0].valid_until);
+                    if(completedBudget){
+                        console.log("Budget completed");
+                    }
+                    const budgetDeleted = await deleteBudget(email,category_id);
+                    if(budgetDeleted){
+                        console.log("Budget deleted");
                     }
                     return { success: true, message: 'budget' };
                 }
