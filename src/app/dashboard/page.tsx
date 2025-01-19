@@ -73,7 +73,6 @@ export default function Dashboard() {
       }
 
       try {
-        toast.info("Fetching transactions...");
 
         // Fetch the transactions for the logged-in user
         const transactions = await getUserTransactions(
@@ -153,7 +152,6 @@ export default function Dashboard() {
               });
             });
           }
-          toast.success("Graph data fetched successfully!");
 
           setIsGraphLoading(false); // Stop loading graph
           setSpendingChartLabels(Object.keys(spendingSources));
@@ -180,7 +178,7 @@ export default function Dashboard() {
     <div className="flex">
       <Navigation /> {/* Navigation component */}
       <div className="flex-1 md:ml-64 p-4">
-        <ToastContainer /> {/* Toast notifications container */}
+      <ToastContainer autoClose={2000} /> {/* Toast notifications container */}
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

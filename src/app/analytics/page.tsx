@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
       <Navigation /> {/* Navigation component */}
       <div className="flex-1 md:ml-64 p-4">
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
-          <ToastContainer /> {/* Toast container for notifications */}
+        <ToastContainer autoClose={2000} /> {/* Toast container for notifications */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

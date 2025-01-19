@@ -94,7 +94,7 @@ export default function TransactionPage() {
 
   return (
     <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8 flex items-center justify-center">
-      <ToastContainer position="top-right" autoClose={3000} />{" "}
+      <ToastContainer autoClose={2000} />
       {/* Toast notifications */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -47,7 +47,6 @@ export default function BudgetPage() {
       }
       setEmail(session.user.email);
       try {
-        toast.info("Fetching budget data...");
         const response = await getBudgetData(session.user.email);
         if (response.success) { 
           toast.success("Budget data fetched successfully");
@@ -59,7 +58,7 @@ export default function BudgetPage() {
             )
           );
         } else {
-          toast.error("Failed to fetch budget data");
+          toast.error("No budget data to fetch");
         }
         // Fetch completed budgets
         try {
@@ -146,7 +145,7 @@ export default function BudgetPage() {
   return (
     <div className="flex">
       <Navigation />
-      <ToastContainer />
+      <ToastContainer autoClose={2000} />
       <div className="flex-1 md:ml-64 p-4">
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
           <motion.div

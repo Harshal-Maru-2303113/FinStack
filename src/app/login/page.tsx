@@ -46,7 +46,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevents the default form submission
     try {
-      toast.info("Sending credentials to server..."); // Inform user that request is being processed
       const response = await signIn("credentials", { // Makes API request for login
         redirect: false,
         email: formData.email,
@@ -95,7 +94,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <ToastContainer /> {/* Toast notifications container */}
+      <ToastContainer autoClose={2000} /> {/* Toast notifications container */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -82,7 +82,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <ToastContainer /> {/* Toast container to display toast messages */}
+      <ToastContainer autoClose={2000} /> {/* Toast container to display toast messages */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -118,7 +118,7 @@ function VerificationPageContent() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <ToastContainer /> {/* Display toast notifications */}
+       <ToastContainer autoClose={2000} /> {/* Display toast notifications */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} // Initial animation state
         animate={{ opacity: 1, y: 0 }} // Final animation state

@@ -39,7 +39,6 @@ export default function TransactionsPage() {
   // Function to fetch transactions from the server with applied filters
   const fetchTransactions = async ({ start, limit, email, filters }: FetchDataProps) => {
     try {
-      toast.info("Fetching transactions..."); // Notify the user that transactions are being fetched
       const response = await getUserTransactions(email, start, limit, filters); // Call the API to get the data
       if (response.success) {
         toast.success("Transactions fetched successfully!"); // Notify success
@@ -87,7 +86,6 @@ export default function TransactionsPage() {
       toast.error("User not authenticated"); // Handle unauthenticated user
       return;
     }
-    toast.info("Fetching more transactions..."); // Notify fetching more data
     const newTransactions = await fetchTransactions({
       start: transactionArray.length, // Start from where we left off
       limit: 10, // Limit the number of transactions to fetch
@@ -122,7 +120,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex">
-      <ToastContainer /> {/* Display toast notifications */}
+       <ToastContainer autoClose={2000} /> {/* Display toast notifications */}
       <Navigation /> {/* Navigation component */}
       <div className="flex-1 md:ml-64 p-4">
         <div className="p-4 md:p-6 lg:p-8">
