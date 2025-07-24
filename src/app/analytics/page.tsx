@@ -9,13 +9,30 @@ import IncomeDistributionChart from "@/components/graphs/IncomeChartByCategories
 import IncomeVsExpenseChart from "@/components/graphs/IncomeVsExpense";
 import ProcessTransactionData from "@/utils/processTransactionData";
 import Navigation from "@/components/Navigation";
-import getUserTransactions from "@/../server/getUserTransactions";
-import { filter } from "@/../server/getUserTransactions";
+import getUserTransactions, {
+  type filter,
+} from "@/../server/getUserTransactions";
 import { Transaction } from "@/types/Transaction";
 import BarGraphSkeleton from "@/components/GraphLoading";
 import { AggregateTransactionData } from "@/utils/AggregateTransactionData";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// Define a type for the daily financial data
+interface DailyData {
+  balance?: number[];
+  income?: number[];
+  expense?: number[];
+}
+
+// Define the main type for the nested aggregated data structure
+type AggregatedDataType = {
+  [year: string]: {
+    [month: string]: {
+      [day: string]: DailyData;
+    };
+  };
+};
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -33,11 +50,15 @@ const staggerContainer = {
 export default function AnalyticsPage() {
   const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
   const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
-  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>([]);
+  const [balanceOverTimeLabels, setBalanceOverTimeLabels] = useState<string[]>(
+    []
+  );
   const [balanceOverTimeData, setBalanceOverTimeData] = useState<number[]>([]);
   const [incomeChartLabels, setIncomeChartLabels] = useState<string[]>([]);
   const [incomeChartData, setIncomeChartData] = useState<number[]>([]);
-  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>([]);
+  const [incomeVsExpenseLabels, setIncomeVsExpenseLabels] = useState<string[]>(
+    []
+  );
   const [incomeData, setIncomeData] = useState<number[]>([]);
   const [expenseData, setExpenseData] = useState<number[]>([]);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
@@ -62,7 +83,11 @@ export default function AnalyticsPage() {
       if (transactions.success) {
         setTransactionArray(transactions.data);
         const processTransactions = ProcessTransactionData(transactions.data);
-        const AggregatedData = await AggregateTransactionData(processTransactions);
+        
+        // Fixed line: Convert to 'unknown' first, then to the desired type
+        const AggregatedData = (await AggregateTransactionData(
+          processTransactions
+        )) as unknown as AggregatedDataType;
 
         const spendingSources: { [key: string]: number } = {};
         const incomeSources: { [key: string]: number } = {};
@@ -75,7 +100,8 @@ export default function AnalyticsPage() {
           if (isCredit) {
             incomeSources[category] = (incomeSources[category] || 0) + amount;
           } else {
-            spendingSources[category] = (spendingSources[category] || 0) + amount;
+            spendingSources[category] =
+              (spendingSources[category] || 0) + amount;
           }
         });
 
