@@ -108,16 +108,19 @@ export default function AnalyticsPage() {
         const income: number[] = [];
         const expense: number[] = [];
         const dateLabel: string[] = [];
-        
+
+        // Add safeguard for AggregatedData itself
         const years = Object.keys(AggregatedData ?? {});
 
         years.forEach((year) => {
+          // Add safeguard for the year object
           const months = Object.keys(AggregatedData[year] ?? {});
           months.forEach((month) => {
+            // Add safeguard for the month object
             const days = Object.keys(AggregatedData[year]?.[month] ?? {});
             days.forEach((day) => {
               const data = AggregatedData[year]?.[month]?.[day];
-              if (!data) return; // Skip if data for the day is missing
+              if (!data) return; // Skip if day data is missing
 
               // Dynamically create the label based on context
               let label = "";
@@ -129,7 +132,7 @@ export default function AnalyticsPage() {
                 label = day;
               }
               dateLabel.push(label);
-              
+
               balances.push(Number(data.balance?.[0] ?? 0));
               income.push(Number(data.income?.[0] ?? 0));
               expense.push(Number(data.expense?.[0] ?? 0));
@@ -139,15 +142,17 @@ export default function AnalyticsPage() {
 
         // Set the graph title/time period based on the context
         if (years.length > 1) {
-            setGraphDate("Overall");
+          setGraphDate("Overall");
         } else if (years.length === 1) {
-            const year = years[0];
-            const months = Object.keys(AggregatedData[year] ?? {});
-            if (months.length > 1) {
-                setGraphDate(year);
-            } else if (months.length === 1) {
-                setGraphDate(`${months[0]} ${year}`);
-            }
+          const year = years[0];
+          const months = Object.keys(AggregatedData[year] ?? {});
+          if (months.length > 1) {
+            setGraphDate(year);
+          } else if (months.length === 1) {
+            setGraphDate(`${months[0]} ${year}`);
+          } else {
+            setGraphDate(year); // Default to year if no months
+          }
         }
         // --- End of Refactored Logic ---
 
@@ -162,7 +167,7 @@ export default function AnalyticsPage() {
         setExpenseData(expense);
         setIsGraphLoading(false);
         if (transactions.data.length > 0) {
-            toast.success("Graphs loaded successfully.");
+          toast.success("Graphs loaded successfully.");
         }
       } else {
         toast.error("Failed to load Graphs.");
