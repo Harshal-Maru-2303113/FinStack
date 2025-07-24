@@ -65,7 +65,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      // Get the session to ensure the user is logged in
       const session = await getSession();
       if (!session) {
         toast.error("Session not found. Please log in.");
@@ -73,8 +72,6 @@ export default function Dashboard() {
       }
 
       try {
-
-        // Fetch the transactions for the logged-in user
         const transactions = await getUserTransactions(
           session.user.email,
           0,
@@ -82,80 +79,34 @@ export default function Dashboard() {
           {} as filter
         );
 
-        if (transactions.success) {
+        if (transactions.success && transactions.data.length > 0) {
           toast.success("Transactions fetched successfully!");
-          // Reverse the transaction data to show the latest transaction first
-          setTransactionArray(transactions.data.reverse());
-          // Set the balance from the latest transaction
-          setBalance(
-            Number(transactions.data[transactions.data.length - 1].balance)
-          );
+          
+          // Note: Reversing here might not be what you want for setting the balance.
+          // The last transaction in the original array is the latest.
+          const latestTransaction = transactions.data[transactions.data.length - 1];
+          setTransactionArray(transactions.data.slice().reverse()); // Use slice() to avoid mutating original
+          setBalance(Number(latestTransaction.balance));
 
-          // Calculate monthly income and expenses
           const FinanceData = await calculateMonthlyFinance(session.user.email);
           setIncome(FinanceData.totalIncome);
           setExpense(FinanceData.totalExpense);
 
-          // Object to track spending by category
           const spendingSources: { [key: string]: number } = {};
           transactions.data.forEach((transaction: Transaction) => {
-            const category = transaction.category_name || "Others";
-            const isCredit =
-              transaction.transaction_type === "credit" ? true : false;
-            if (!isCredit) {
+            if (transaction.transaction_type !== "credit") {
+              const category = transaction.category_name || "Others";
               spendingSources[category] =
                 (spendingSources[category] || 0) + Number(transaction.amount);
             }
           });
-
-          // Process transaction data for graph aggregation
-          const processTransactions = ProcessTransactionData(transactions.data);
-          const AggregatedData = await AggregateTransactionData(
-            processTransactions
-          );
-
-          const balances: number[] = [];
-          const dateLabel: string[] = [];
-
-          // Process the aggregated data to format for the balance chart
-          if (Object.keys(AggregatedData).length === 1) {
-            const year = Number(Object.keys(AggregatedData)[0]);
-            if (Object.keys(AggregatedData[year]).length === 1) {
-              const month = Object.keys(AggregatedData[year])[0];
-              const days = AggregatedData[year][month];
-              Object.entries(days).forEach(([day, Data]) => {
-                dateLabel.push(String(day));
-                balances.push(Number(Data.balance[0]));
-              });
-            } else {
-              const months = Object.keys(AggregatedData[year]);
-              Object.entries(months).forEach(([month]) => {
-                const days = AggregatedData[year][month];
-                Object.entries(days).forEach(([day, Data]) => {
-                  dateLabel.push(String(day) + " " + month);
-                  balances.push(Number(Data.balance[0]));
-                });
-              });
-            }
-          } else {
-            const years = Number(Object.keys(AggregatedData));
-            Object.entries(years).forEach(([year]) => {
-              const months = Object.keys(AggregatedData[Number(year)]);
-              Object.entries(months).forEach(([month]) => {
-                const days = AggregatedData[Number(year)][month];
-                Object.entries(days).forEach(([day, Data]) => {
-                  dateLabel.push(
-                    String(day) + " " + month + " " + String(year)
-                  );
-                  balances.push(Number(Data.balance[0]));
-                });
-              });
-            });
-          }
-
-          setIsGraphLoading(false); // Stop loading graph
+          
           setSpendingChartLabels(Object.keys(spendingSources));
           setSpendingChartData(Object.values(spendingSources));
+
+        } else if (transactions.success) {
+          // Handle case with no transactions
+          toast.info("No transactions found.");
         } else {
           toast.error("Failed to fetch transactions.");
         }
@@ -163,14 +114,14 @@ export default function Dashboard() {
         console.error("Error fetching transactions:", error);
         toast.error("An error occurred while fetching transactions.");
       } finally {
-        setIsFinanceValuesLoading(false); // Stop loading finance values
-        setIsTransactionLoading(false); // Stop loading transactions
+        setIsFinanceValuesLoading(false);
+        setIsTransactionLoading(false);
+        setIsGraphLoading(false); // Ensure graph loading stops
       }
     };
 
-    fetchTransactions(); // Fetch data when the component mounts
+    fetchTransactions();
   }, []);
-
   // Calculate total spending from the chart data
   const Total_Spending = spendingChartData.reduce((acc, curr) => acc + curr, 0);
 
