@@ -83,8 +83,6 @@ export default function AnalyticsPage() {
       if (transactions.success) {
         setTransactionArray(transactions.data);
         const processTransactions = ProcessTransactionData(transactions.data);
-        
-        // Fixed line: Convert to 'unknown' first, then to the desired type
         const AggregatedData = (await AggregateTransactionData(
           processTransactions
         )) as unknown as AggregatedDataType;
@@ -105,51 +103,53 @@ export default function AnalyticsPage() {
           }
         });
 
+        // --- Start of Refactored and Safer Logic ---
         const balances: number[] = [];
         const income: number[] = [];
         const expense: number[] = [];
         const dateLabel: string[] = [];
+        
+        const years = Object.keys(AggregatedData ?? {});
 
-        const years = Object.keys(AggregatedData);
-        if (years.length === 1) {
-          const year = years[0];
-          const months = Object.keys(AggregatedData[year]);
-          if (months.length === 1) {
-            const month = months[0];
-            const days = AggregatedData[year][month];
-            Object.entries(days ?? {}).forEach(([day, Data]) => {
-              dateLabel.push(day);
-              balances.push(Number(Data.balance?.[0] ?? 0));
-              income.push(Number(Data.income?.[0] ?? 0));
-              expense.push(Number(Data.expense?.[0] ?? 0));
-              setGraphDate(`${month} ${year}`);
-            });
-          } else {
-            months.forEach((month) => {
-              const days = AggregatedData[year][month];
-              Object.entries(days ?? {}).forEach(([day, Data]) => {
-                dateLabel.push(`${day} ${month}`);
-                balances.push(Number(Data.balance?.[0] ?? 0));
-                income.push(Number(Data.income?.[0] ?? 0));
-                expense.push(Number(Data.expense?.[0] ?? 0));
-              });
-              setGraphDate(year);
-            });
-          }
-        } else {
-          years.forEach((year) => {
-            const months = Object.keys(AggregatedData[year]);
-            months.forEach((month) => {
-              const days = AggregatedData[year][month];
-              Object.entries(days ?? {}).forEach(([day, Data]) => {
-                dateLabel.push(`${day} ${month} ${year}`);
-                balances.push(Number(Data.balance?.[0] ?? 0));
-                income.push(Number(Data.income?.[0] ?? 0));
-                expense.push(Number(Data.expense?.[0] ?? 0));
-              });
+        years.forEach((year) => {
+          const months = Object.keys(AggregatedData[year] ?? {});
+          months.forEach((month) => {
+            const days = Object.keys(AggregatedData[year]?.[month] ?? {});
+            days.forEach((day) => {
+              const data = AggregatedData[year]?.[month]?.[day];
+              if (!data) return; // Skip if data for the day is missing
+
+              // Dynamically create the label based on context
+              let label = "";
+              if (years.length > 1) {
+                label = `${day} ${month} ${year}`;
+              } else if (months.length > 1) {
+                label = `${day} ${month}`;
+              } else {
+                label = day;
+              }
+              dateLabel.push(label);
+              
+              balances.push(Number(data.balance?.[0] ?? 0));
+              income.push(Number(data.income?.[0] ?? 0));
+              expense.push(Number(data.expense?.[0] ?? 0));
             });
           });
+        });
+
+        // Set the graph title/time period based on the context
+        if (years.length > 1) {
+            setGraphDate("Overall");
+        } else if (years.length === 1) {
+            const year = years[0];
+            const months = Object.keys(AggregatedData[year] ?? {});
+            if (months.length > 1) {
+                setGraphDate(year);
+            } else if (months.length === 1) {
+                setGraphDate(`${months[0]} ${year}`);
+            }
         }
+        // --- End of Refactored Logic ---
 
         setBalanceOverTimeLabels(dateLabel);
         setBalanceOverTimeData(balances);
@@ -161,7 +161,9 @@ export default function AnalyticsPage() {
         setIncomeData(income);
         setExpenseData(expense);
         setIsGraphLoading(false);
-        toast.success("Graphs loaded successfully.");
+        if (transactions.data.length > 0) {
+            toast.success("Graphs loaded successfully.");
+        }
       } else {
         toast.error("Failed to load Graphs.");
       }
