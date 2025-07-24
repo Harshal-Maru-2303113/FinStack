@@ -21,8 +21,6 @@ import TransactionModal from "@/components/TransactionModal"; // Modal to displa
 import calculateMonthlyFinance from "@/utils/calculateMonthlyFinance"; // Utility to calculate monthly finance stats
 import SpendingChartByCategories from "@/components/graphs/SpendingChartByCategories"; // Spending chart component
 import BarGraphSkeleton from "@/components/GraphLoading"; // Skeleton loading component for graphs
-import ProcessTransactionData from "@/utils/processTransactionData"; // Utility to process transaction data
-import { AggregateTransactionData } from "@/utils/AggregateTransactionData"; // Utility to aggregate transaction data
 import { ToastContainer, toast } from "react-toastify"; // For showing toast notifications
 import "react-toastify/dist/ReactToastify.css"; // Import toast CSS
 
@@ -59,9 +57,7 @@ export default function Dashboard() {
   const [spendingChartLabels, setSpendingChartLabels] = useState<string[]>([]);
   const [spendingChartData, setSpendingChartData] = useState<number[]>([]);
 
-
   const [isGraphLoading, setIsGraphLoading] = useState(true);
-
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -81,17 +77,21 @@ export default function Dashboard() {
 
         if (transactions.success && transactions.data.length > 0) {
           toast.success("Transactions fetched successfully!");
-          
-          // Note: Reversing here might not be what you want for setting the balance.
-          // The last transaction in the original array is the latest.
-          const latestTransaction = transactions.data[transactions.data.length - 1];
-          setTransactionArray(transactions.data.slice().reverse()); // Use slice() to avoid mutating original
+
+          // Get the latest transaction to set the current balance
+          const latestTransaction =
+            transactions.data[transactions.data.length - 1];
           setBalance(Number(latestTransaction.balance));
 
+          // Use slice() to create a reversed copy for display without changing the original
+          setTransactionArray(transactions.data.slice().reverse());
+
+          // Calculate monthly totals
           const FinanceData = await calculateMonthlyFinance(session.user.email);
           setIncome(FinanceData.totalIncome);
           setExpense(FinanceData.totalExpense);
 
+          // --- This is the only logic needed for your spending chart ---
           const spendingSources: { [key: string]: number } = {};
           transactions.data.forEach((transaction: Transaction) => {
             if (transaction.transaction_type !== "credit") {
@@ -100,12 +100,12 @@ export default function Dashboard() {
                 (spendingSources[category] || 0) + Number(transaction.amount);
             }
           });
-          
+
           setSpendingChartLabels(Object.keys(spendingSources));
           setSpendingChartData(Object.values(spendingSources));
-
+          // --- End of required logic ---
         } else if (transactions.success) {
-          // Handle case with no transactions
+          // Handle case where user has no transactions
           toast.info("No transactions found.");
         } else {
           toast.error("Failed to fetch transactions.");
@@ -114,9 +114,10 @@ export default function Dashboard() {
         console.error("Error fetching transactions:", error);
         toast.error("An error occurred while fetching transactions.");
       } finally {
+        // Stop all loading indicators
         setIsFinanceValuesLoading(false);
         setIsTransactionLoading(false);
-        setIsGraphLoading(false); // Ensure graph loading stops
+        setIsGraphLoading(false);
       }
     };
 
@@ -129,7 +130,8 @@ export default function Dashboard() {
     <div className="flex">
       <Navigation /> {/* Navigation component */}
       <div className="flex-1 md:ml-64 p-4">
-      <ToastContainer autoClose={2000} /> {/* Toast notifications container */}
+        <ToastContainer autoClose={2000} />{" "}
+        {/* Toast notifications container */}
         <div className="min-h-screen bg-black p-4 md:p-6 lg:p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
